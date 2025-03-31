@@ -1,33 +1,32 @@
 <?php
 session_start();
 require_once '../DB/connexion.php';
+require_once '../models/user.php';
+require_once '../DB/userDAO.php';
 
-// Récupération et validation des données du formulaire
-$email = trim($_POST['email'] ?? '');
-$password = trim($_POST['password'] ?? '');
+$userDAO = new UserDAO();
+$email = $_POST['email'] ?? '';
+$password = $_POST['password'] ?? '';
 
 if (empty($email) || empty($password)) {
-    header("Location: ../index.php?error=invalidCredentials");
+    header("Location: ../index.php?error=emptyFields");
     exit;
 }
 
-$conn = Database::getInstance()->getConnection();
-$stmt = $conn->prepare("SELECT * FROM users WHERE email = :email LIMIT 1");
-$stmt->execute(['email' => $email]);
-$user = $stmt->fetch();
-
-if ($user && $user['password_hash'] === $password) { // Utilisation de password_hash
-    $_SESSION['user_id'] = $user['user_id']; // Remplacement de id par user_id
-    $_SESSION['role'] = $user['role'];
-    
-    if ($user['role'] === 'ADMIN') {
-        header('Location: ../ihm/admin/dashboard.php');
+try {
+    $user = $userDAO->getUserByEmail($email);
+    if ($user && password_verify($password, $user->getPasswordHash())) {
+        $_SESSION['user_id'] = $user->getUserId();
+        $_SESSION['role'] = $user->getRole();
+        $redirect = $user->getRole() === 'fournisseur' ? '../ihm/admin/dashboard.php' : '../ihm/client/dashboard.php';
+        header("Location: $redirect");
+        exit;
     } else {
-        header('Location: ../ihm/client/dashboard.php');
+        header("Location: ../index.php?error=invalidCredentials");
+        exit;
     }
-    exit;
-} else {
-    header("Location: ../index.php?error=invalidCredentials");
+} catch (Exception $e) {
+    error_log($e->getMessage());
+    header("Location: ../index.php?error=databaseError");
     exit;
 }
-?>

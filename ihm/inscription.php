@@ -10,7 +10,7 @@
 <body>
     <div class="login-container">
         <div class="login-header">
-            <h1>Inscription</h1>
+            <h1>Gestion des Factures d'Électricité</h1>
         </div>
         <?php
         // Mapping des erreurs spécifiques à l'inscription
@@ -19,7 +19,6 @@
             'clientNotFoundOrLinked'   => "Client introuvable ou déjà lié.",
             'emailExists'              => "Cette adresse email est déjà utilisée.",
             'registrationFailed'       => "Erreur lors de l'inscription, réessayez plus tard.",
-            // ...autres codes si nécessaires...
         ];
         if (isset($_GET['error']) && array_key_exists($_GET['error'], $errorMapping)) {
             echo '<div class="error-message">' . $errorMapping[$_GET['error']] . '</div>';
