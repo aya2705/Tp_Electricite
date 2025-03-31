@@ -128,3 +128,44 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+
+
+
+ // Fonction pour remplir les informations dans le modal
+ function fillClaimDetails(claimData) {
+    document.getElementById('client-name').textContent = claimData.clientName;
+    document.getElementById('client-id').textContent = claimData.clientId;
+    document.getElementById('client-address').textContent = claimData.clientAddress;
+    document.getElementById('client-email').textContent = claimData.clientEmail;
+    document.getElementById('client-phone').textContent = claimData.clientPhone;
+    document.getElementById('claim-ref').textContent = claimData.claimRef;
+    document.getElementById('claim-type').textContent = claimData.claimType;
+    document.getElementById('claim-date').textContent = claimData.claimDate;
+    document.getElementById('claim-description').textContent = claimData.claimDescription;
+
+    // Afficher les pièces jointes
+    let attachmentsContainer = document.querySelector('.attachments');
+    attachmentsContainer.innerHTML = ''; // Reset current attachments
+    claimData.attachments.forEach(function (attachment) {
+        let attachmentElement = document.createElement('div');
+        attachmentElement.classList.add('attachment');
+        attachmentElement.innerHTML = `<i class="fas fa-image"></i><span>${attachment}</span>`;
+        attachmentsContainer.appendChild(attachmentElement);
+    });
+}
+
+// Exemple d'appel AJAX pour récupérer les données de la réclamation
+function loadClaimDetails(claimId) {
+    fetch(`/getClaimDetails.php?id=${claimId}`)
+        .then(response => response.json())
+        .then(data => {
+            fillClaimDetails(data);
+        })
+        .catch(error => console.error('Erreur:', error));
+}
+
+// Exemple d'appel pour charger les données de la réclamation avec un ID spécifique
+loadClaimDetails(123); // Remplace 123 par l'ID réel de la réclamation
+
+// !Pagination
+
