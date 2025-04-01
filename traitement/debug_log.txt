@@ -1,0 +1,42 @@
+Array
+(
+    [reclamation_id] => <br />
+<b>Warning</b>:  Undefined variable $reclamationId in <b>C:\xampp\htdocs\Tp_Electricite-1\ihm\Reclamation\claims-frs.php</b> on line <b>226</b><br />
+
+    [action] => updateStatus
+    [response-text] => Cher client,
+
+Nous avons traité votre réclamation.
+
+Cordialement,
+Le service client
+    [claim-status] => en_traitement
+)
+Array
+(
+    [reclamation_id] => <br />
+<b>Warning</b>:  Undefined variable $reclamationId in <b>C:\xampp\htdocs\Tp_Electricite-1\ihm\Reclamation\claims-frs.php</b> on line <b>226</b><br />
+
+    [action] => updateStatus
+    [response-text] => Cher client,
+
+Nous avons traité votre réclamation.
+
+Cordialement,
+Le service client
+    [claim-status] => en_traitement
+)
+Array
+(
+    [reclamation_id] => <br />
+<b>Warning</b>:  Undefined variable $reclamationId in <b>C:\xampp\htdocs\Tp_Electricite-1\ihm\Reclamation\claims-frs.php</b> on line <b>226</b><br />
+
+    [action] => updateStatus
+    [response-text] => Cher client,
+
+Nous avons traité votre réclamation.
+
+Cordialement,
+Le service client
+    [claim-status] => résolue
+)

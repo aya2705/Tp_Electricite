@@ -1,9 +1,9 @@
 <?php
-require_once '../DB/models/Reclamation.php';
-session_start();
-
-// Si l'action est l'ajout de réclamation
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['action'] === 'add') {
+ require_once '../DB/models/Reclamation.php';
+ session_start();
+ 
+ // Si l'action est l'ajout de réclamation
+ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['action'] === 'add') {
     try {
         $client_id = $_SESSION['client_id'] ?? 1;
         $type = htmlspecialchars($_POST['claim_type']);
@@ -11,7 +11,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['action'] === 'add') {
         $statut = 'en_attente';
         $pieces_jointes = null;
 
-        // Vérification et téléchargement des pièces jointes
         if (!empty($_FILES['attachments']['name'][0])) {
             $uploadDir = '../ihm/Reclamation/uploads/';
             $uploadedFiles = [];
@@ -34,55 +33,77 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['action'] === 'add') {
         } else {
             echo "Erreur lors de l'ajout de la réclamation.";
         }
-
     } catch (Exception $e) {
         echo "Erreur : " . $e->getMessage();
     }
 }
+ // Pour afficher les détails de la réclamation dans le modal
 
-// Pour afficher les détails de la réclamation dans le modal
+ $reclamationId = $_GET['reclamationId'] ?? $_POST['reclamationId'] ?? null;
+if ($reclamationId) { // Vérifie si la variable est définie
 
-// Code principal pour récupérer les informations
-$reclamationId = $_GET['reclamation_id'] ?? null;
-
-if ($reclamationId && is_numeric($reclamationId)) {
     try {
-        // Récupérer la réclamation depuis la base de données
         $reclamation = Reclamation::getReclamationById($reclamationId);
-
         if ($reclamation) {
-            // Vérification et récupération des informations
-            $clientId = $reclamation['client_id']; 
-            $claimDescription = $reclamation['description'];  // Description
-            $claimDate = $reclamation['date_creation']; 
-            $piecesJointes = isset($reclamation['pieces_jointes']) ? explode(',', $reclamation['pieces_jointes']) : [];  // Si 'pieces_jointes' existe, le séparer en tableau
-
-            // Si la description est vide ou non définie, utilisez une valeur par défaut
-            if (empty($claimDescription)) {
-                $claimDescription = "Aucune description disponible.";
-            }
-
-            // Récupérer les détails du client
+            $clientId = $reclamation['client_id'];
+            $claimDescription = $reclamation['description'];
+            $claimDate = $reclamation['date_creation'];
+            $claimType = ucfirst($reclamation['type']);
+            $piecesJointes = isset($reclamation['pieces_jointes']) ? explode(',', $reclamation['pieces_jointes']) : [];
+            
             $client = Reclamation::getClientById($clientId);
 
-            if ($client) {
-                $clientName = $client['full_name'];
-                $clientAddress = $client['address'];
-                $clientPhone = $client['phone'];
+// Vérifier si $client contient bien des données avant de l'utiliser
+            if ($client && is_array($client)) {
+                $clientName = htmlspecialchars($client['full_name'] ?? 'Non renseigné');
+                $clientEmail = htmlspecialchars($client['email'] ?? 'Non renseigné');
+                $clientPhone = htmlspecialchars($client['phone'] ?? 'Non renseigné');
+                $clientAddress = htmlspecialchars($client['address'] ?? 'Non renseigné');
                 $claimRef = "#REF-" . $reclamationId;
 
-                // Passer les informations au modal HTML
-                include '../ihm/Reclamation/claims-frs.php'; // Afficher le modal
+                // Construire la réponse HTML
+                echo "
+                    <div class='client-info'>
+                        <h3>Information Client</h3>
+                        <p><strong>Nom:</strong> <span>$clientName</span></p>
+                        <p><strong>Email:</strong> <span>$clientEmail</span></p>
+                        <p><strong>Téléphone:</strong> <span>$clientPhone</span></p>
+                        <p><strong>Adresse:</strong> <span>$clientAddress</span></p>
+                    </div>
+                    
+                    <div class='claim-detail'>
+                        <h3>Détails de la réclamation</h3>
+                        <p><strong>Référence:</strong> <span>$claimRef</span></p>
+                        <p><strong>Type:</strong> <span>$claimType</span></p>
+                        <p><strong>Date de soumission:</strong> <span>$claimDate</span></p>
+                        <p><strong>Description:</strong></p>
+                        <div class='claim-description'>$claimDescription</div>
+                        <p><strong>Pièces jointes:</strong></p>
+                        <div class='attachments'>";
+                if (!empty($piecesJointes[0])) {
+                    foreach ($piecesJointes as $attachment) {
+                        echo "<div class='attachment'>
+                                <i class='fas fa-paperclip'></i> <a  href='../Reclamation/uploads/$attachment'  target='_blank'>$attachment</a>
+                              </div>";
+                    }
+                } else {
+                    echo "<p>Aucune pièce jointe.</p>";
+                }
+                echo "</div></div>";
             } else {
-                echo "Client introuvable.";
+                echo "<p style='color: red;'>Client introuvable.</p>";
             }
         } else {
-            echo "Réclamation introuvable.";
+            echo "<p style='color: red;'>Réclamation introuvable.</p>";
         }
     } catch (Exception $e) {
-        echo "Erreur : " . $e->getMessage();
+        echo "<p style='color: red;'>Erreur : " . $e->getMessage() . "</p>";
     }
-} else {
-    echo "L'ID de la réclamation est manquant ou invalide!";
 }
-?>
+
+ 
+ 
+
+ 
+
+ ?>
