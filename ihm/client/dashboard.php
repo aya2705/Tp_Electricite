@@ -1,19 +1,19 @@
 <?php
-// Début du fichier dashboard.php - REMPLACEZ le code existant
+
 session_start();
 
-// FORCER un utilisateur spécifique (à utiliser seulement pour le test)
-$_SESSION['client_id'] = 1; // ID du client que vous voulez tester
+
+$_SESSION['client_id'] = 1;
 $_SESSION['user_id'] = 1;
 $_SESSION['email'] = 'client1@test.com';
 $_SESSION['role'] = 'client';
 
-// Debug - Affiche les infos session (à enlever en production)
+
 echo "<div style='background:#f0f0f0; padding:10px; margin-bottom:20px;'>";
 echo "<strong>Mode TEST activé :</strong> Utilisateur forcé (ID: ".$_SESSION['client_id'].")";
 echo "</div>";
 
-// Connexion DB et récupération des factures (votre code existant)
+
 require_once __DIR__.'/../../DB/connexion.php';
 require_once __DIR__.'/../../models/facture.php';
 require_once __DIR__.'/../../DB/factureDAO.php';
