@@ -25,7 +25,7 @@ try {
     
     $tcpdfPath = 'C:/xampp/htdocs/Tp_Electricite/vendor/tecnickcom/tcpdf/tcpdf.php';
     if (!file_exists($tcpdfPath)) {
-        die("Erreur : TCPDF non trouvé");
+        die("Erreur : tcpdf non trouvé");
     }
     require_once $tcpdfPath;
 
@@ -144,14 +144,12 @@ try {
     $pdf->Cell(145, 7, 'Total TTC', 1, 0, 'R');
     $pdf->Cell(45, 7, number_format($totalTTC, 2, ',', ' '), 1, 1, 'R');
 
-
     $pdf->Ln(10);
     $pdf->SetFont('helvetica', 'I', 8);
     $pdf->MultiCell(0, 5, 'Mentions légales: Paiement sous 30 jours. Pénailté de retard: 10% du montant après 30 jours.', 0, 'J');
 
     $nomClient = preg_replace('/[^a-zA-Z0-9-_]/', '_', $client->getFullName());
     $filename = 'Facture_' . $nomClient . '_' . date('Y-m') . '.pdf';
-
 
     $pdf->Output($filename, 'D');
 
