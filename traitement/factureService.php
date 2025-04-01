@@ -14,9 +14,6 @@ class FactureService {
         $this->consommationService = $consommationService;
     }
 
-    /**
-     * Génère les factures pour toutes les consommations validées d'une période
-     */
     public function genererFacturesPourPeriode($periode_id) {
         $consommations = $this->consommationService->getConsommationsValidees($periode_id);
         $count = 0;
@@ -30,7 +27,7 @@ class FactureService {
                 );
                 $count++;
             } catch (Exception $e) {
-                // Loguer l'erreur et continuer avec les autres
+               
                 error_log("Erreur création facture pour client " . 
                          $consommation->getClientId() . ": " . $e->getMessage());
             }
