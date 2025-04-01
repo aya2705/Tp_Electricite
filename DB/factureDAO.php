@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../models/Facture.php';
 
-// DB/factureDAO.php
+
 class FactureDAO {
     private $conn;
 
