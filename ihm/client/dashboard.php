@@ -208,9 +208,9 @@ try {
                 </span>
             </td>
             <td>
-            <a href="../../traitement/generate_pdf.php?id=<?= $facture->getFactureId() ?>" class="btn-pdf" download>
-    <i class="fas fa-file-pdf"></i> PDF
-</a>
+    <a href="../../traitement/generate_pdf.php?id=<?= $facture->getFactureId() ?>" class="btn-pdf" download>
+        <i class="fas fa-file-pdf"></i> PDF
+    </a>
 </td>
         </tr>
         <?php endforeach; ?>
