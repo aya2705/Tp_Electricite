@@ -24,7 +24,7 @@ class Facture {
         $this->penalites = $data['penalites'] ?? 0;
     }
 
-    // Getters
+  
     public function getFactureId() { return $this->facture_id; }
     public function getClientId() { return $this->client_id; }
     public function getPeriode() { return $this->periode; }
@@ -36,14 +36,12 @@ class Facture {
     public function getDatePaiement() { return $this->date_paiement; }
     public function getPenalites() { return $this->penalites; }
 
-    // Setters
+ 
     public function setStatutPaiement($statut) { $this->statut_paiement = $statut; }
     public function setDatePaiement($date) { $this->date_paiement = $date; }
     public function setPenalites($penalites) { $this->penalites = $penalites; }
 
-    /**
-     * Vérifie si la facture est en retard
-     */
+  
     public function estEnRetard() {
         if ($this->statut_paiement === 'payée') {
             return false;
@@ -53,9 +51,7 @@ class Facture {
         return date('Y-m-d') > $dateLimite;
     }
 
-    /**
-     * Calcule les pénalités de retard
-     */
+  
     public function calculerPenalites(Tarif $tarif) {
         if (!$this->estEnRetard()) {
             return 0;
