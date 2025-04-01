@@ -11,6 +11,7 @@ if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
 $facture_id = (int)$_GET['id'];
 
 try {
+  
     $db = creerConnexion();
     $factureDAO = new FactureDAO($db);
     $clientDAO = new ClientDAO($db);
@@ -22,27 +23,22 @@ try {
     
     $client = $clientDAO->getById($facture->getClientId());
     
-    
-    $tcpdfPath = 'C:/xampp/htdocs/Tp_Electricite/vendor/tecnickcom/tcpdf/tcpdf.php';
-    if (!file_exists($tcpdfPath)) {
-        die("Erreur : tcpdf non trouvé");
-    }
-    require_once $tcpdfPath;
-
-
+   
+    require_once 'C:/xampp/htdocs/Tp_Electricite/vendor/tecnickcom/tcpdf/tcpdf.php';
     $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
     
-   
-    $pdf->SetCreator('Système de Facturation');
+  
+    $pdf->SetCreator('Système de Facturation Électrique');
     $pdf->SetAuthor('Société des Électricités');
     $pdf->SetTitle('Facture ' . $facture_id);
     
+ 
     $pdf->SetMargins(15, 25, 15);
     $pdf->SetHeaderMargin(10);
     $pdf->SetFooterMargin(10);
     $pdf->AddPage();
 
-  
+    
     $pdf->SetFont('helvetica', 'B', 16);
     $pdf->Cell(0, 10, 'FACTURE D\'ÉLECTRICITÉ', 0, 1, 'R');
     $pdf->SetFont('helvetica', '', 10);
@@ -61,7 +57,7 @@ try {
     $pdf->Cell(0, 5, 'Tél: ' . $client->getPhone(), 0, 1);
     $pdf->Ln(5);
 
-    
+   
     $pdf->SetFont('helvetica', 'B', 12);
     $pdf->Cell(0, 10, 'Détails de la facture', 0, 1);
     $pdf->SetFont('helvetica', '', 10);
@@ -85,15 +81,17 @@ try {
     
     $pdf->Ln(10);
 
-   
     $consommation = $facture->getConsommation();
+   
     $tranche1 = min($consommation, 100);
     $prix_tranche1 = 0.82;
     $montant1 = $tranche1 * $prix_tranche1;
 
+    
     $tranche2 = ($consommation > 100) ? min($consommation - 100, 50) : 0;
     $prix_tranche2 = 0.92;
     $montant2 = $tranche2 * $prix_tranche2;
+
 
     $tranche3 = ($consommation > 150) ? $consommation - 150 : 0;
     $prix_tranche3 = 1.10;
@@ -103,13 +101,12 @@ try {
     $tva = $totalHT * 0.10;
     $totalTTC = $totalHT + $tva + $facture->getPenalites();
 
-  
     $pdf->SetFont('helvetica', 'B', 12);
     $pdf->Cell(0, 10, 'Détails tarifaires', 0, 1);
     
     $pdf->SetFont('helvetica', 'B', 10);
-    $pdf->Cell(100, 7, 'Tranche', 1, 0, 'C');
-    $pdf->Cell(45, 7, 'Prix/kWh (DH)', 1, 0, 'C');
+    $pdf->Cell(100, 7, 'Tranche de consommation', 1, 0, 'C');
+    $pdf->Cell(45, 7, 'Prix unitaire (DH)', 1, 0, 'C');
     $pdf->Cell(45, 7, 'Montant (DH)', 1, 1, 'C');
     
     $pdf->SetFont('helvetica', '', 10);
@@ -118,17 +115,18 @@ try {
     $pdf->Cell(45, 7, number_format($montant1, 2, ',', ' '), 1, 1, 'R');
 
     if ($montant2 > 0) {
-        $pdf->Cell(100, 7, '101-150 kWh', 1, 0);
+        $pdf->Cell(100, 7, 'De 101 à 150 kWh', 1, 0);
         $pdf->Cell(45, 7, number_format($prix_tranche2, 2, ',', ' '), 1, 0, 'R');
         $pdf->Cell(45, 7, number_format($montant2, 2, ',', ' '), 1, 1, 'R');
     }
 
     if ($montant3 > 0) {
-        $pdf->Cell(100, 7, '>151 kWh', 1, 0);
+        $pdf->Cell(100, 7, 'Plus de 151 kWh', 1, 0);
         $pdf->Cell(45, 7, number_format($prix_tranche3, 2, ',', ' '), 1, 0, 'R');
         $pdf->Cell(45, 7, number_format($montant3, 2, ',', ' '), 1, 1, 'R');
     }
 
+   
     $pdf->SetFont('helvetica', 'B', 10);
     $pdf->Cell(145, 7, 'Total HT', 1, 0, 'R');
     $pdf->Cell(45, 7, number_format($totalHT, 2, ',', ' '), 1, 1, 'R');
@@ -137,22 +135,32 @@ try {
     $pdf->Cell(45, 7, number_format($tva, 2, ',', ' '), 1, 1, 'R');
 
     if ($facture->getPenalites() > 0) {
-        $pdf->Cell(145, 7, 'Pénalités', 1, 0, 'R');
+        $pdf->Cell(145, 7, 'Pénalités de retard', 1, 0, 'R');
         $pdf->Cell(45, 7, number_format($facture->getPenalites(), 2, ',', ' '), 1, 1, 'R');
     }
 
     $pdf->Cell(145, 7, 'Total TTC', 1, 0, 'R');
     $pdf->Cell(45, 7, number_format($totalTTC, 2, ',', ' '), 1, 1, 'R');
 
+
     $pdf->Ln(10);
     $pdf->SetFont('helvetica', 'I', 8);
     $pdf->MultiCell(0, 5, 'Mentions légales: Paiement sous 30 jours. Pénailté de retard: 10% du montant après 30 jours.', 0, 'J');
 
+    
     $nomClient = preg_replace('/[^a-zA-Z0-9-_]/', '_', $client->getFullName());
     $filename = 'Facture_' . $nomClient . '_' . date('Y-m') . '.pdf';
+
+  
+    $dossierFactures = __DIR__.'/./factures/';
+    if (!file_exists($dossierFactures)) {
+        mkdir($dossierFactures, 0755, true);
+    }
+    $cheminComplet = $dossierFactures . $filename;
+    $pdf->Output($cheminComplet, 'F');
 
     $pdf->Output($filename, 'D');
 
 } catch (Exception $e) {
-    die("Erreur génération PDF: " . $e->getMessage());
+    die("Erreur lors de la génération du PDF: " . $e->getMessage());
 }
