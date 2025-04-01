@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +8,7 @@
     <link rel="stylesheet" href="/assets/css/main.css">
     <link rel="stylesheet" href="/assets/css/login.css">
 </head>
+
 <body>
     <div class="login-container">
         <div class="login-header">
@@ -16,7 +18,7 @@
         // Ajout du mapping pour les codes d'erreur
         $errorMapping = [
             'invalidCredentials' => "Email ou mot de passe incorrect.",
-            'emptyFields'        => "Tous les champs doivent être renseignés.",
+            'emptyFields' => "Tous les champs doivent être renseignés.",
             // ...autres codes d'erreur...
         ];
         if (isset($_GET['error']) && array_key_exists($_GET['error'], $errorMapping)) {
@@ -34,7 +36,7 @@
         ?>
         <div class="login-form">
             <h2>Connexion</h2>
-            <form id="login-form" method="POST" action="../traitement/authenticationService.php">
+            <form method="POST" action="../traitement/userService.php?action=authenticate">
                 <div class="form-group">
                     <label for="email">Email</label>
                     <input type="email" id="email" name="email" required>
@@ -53,4 +55,5 @@
         </div>
     </div>
 </body>
+
 </html>

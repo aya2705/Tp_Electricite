@@ -8,6 +8,17 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'fournisseur') {
 require_once '../../DB/ClientDAO.php';
 $clientDAO = new ClientDAO();
 $clients = $clientDAO->getAllClients();
+
+$messages = [
+    'clientAdded'  => 'Le client a bien été ajouté.',
+    'clientEdited' => 'Le client a bien été modifié.',
+    'clientDeleted'=> 'Le client a bien été supprimé.',
+    'emptyFields'  => 'Veuillez remplir tous les champs.',
+    'clientFailed' => 'Échec de l’ajout du client.',
+    'editFailed'   => 'Échec de la modification du client.',
+    'deleteFailed' => 'Échec de la suppression du client.',
+    'missingId'    => 'ID du client manquant.'
+];
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -166,13 +177,18 @@ $clients = $clientDAO->getAllClients();
         <div class="main-content">
             <h1>Gestion des Clients</h1>
             
-            <?php if(isset($_GET['success'])): ?>
+            <!-- Affichage des messages mappés -->
+            <?php if(isset($_GET['success'])): 
+                $message = $messages[$_GET['success']] ?? htmlspecialchars($_GET['success']);
+            ?>
                 <div class="alert alert-success">
-                    <?= htmlspecialchars($_GET['success']); ?>
+                    <?= $message ?>
                 </div>
-            <?php elseif(isset($_GET['error'])): ?>
+            <?php elseif(isset($_GET['error'])): 
+                $message = $messages[$_GET['error']] ?? htmlspecialchars($_GET['error']);
+            ?>
                 <div class="alert alert-danger">
-                    <?= htmlspecialchars($_GET['error']); ?>
+                    <?= $message ?>
                 </div>
             <?php endif; ?>
             
@@ -233,7 +249,7 @@ $clients = $clientDAO->getAllClients();
                 <span class="close">&times;</span>
             </div>
             <div class="modal-body">
-                <form id="add-client-form" method="POST" action="../../traitement/addClientService.php">
+                <form id="add-client-form" method="POST" action="../../traitement/ClientService.php?action=add">
                     <div class="form-group">
                         <label for="client-name">Nom complet</label>
                         <input type="text" id="client-name" name="full_name" required>
@@ -260,7 +276,7 @@ $clients = $clientDAO->getAllClients();
                 <span class="close-edit">&times;</span>
             </div>
             <div class="modal-body">
-                <form id="edit-client-form" method="POST" action="../../traitement/editClientService.php">
+                <form id="edit-client-form" method="POST" action="../../traitement/ClientService.php?action=edit">
                     <input type="hidden" name="client_id" id="edit-client-id">
                     <div class="form-group">
                         <label for="edit-client-name">Nom complet</label>
@@ -316,7 +332,7 @@ $clients = $clientDAO->getAllClients();
         $('.client-actions a.delete').on('click', function() {
             const client_id = $(this).data('client-id');
             if (confirm("Voulez-vous vraiment supprimer ce client ?")) {
-                window.location.href = "../../traitement/deleteClientService.php?client_id=" + client_id;
+                window.location.href = "../../traitement/ClientService.php?action=delete&client_id=" + client_id;
             }
         });
     </script>
