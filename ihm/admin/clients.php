@@ -6,22 +6,26 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'fournisseur') {
 }
 
 require_once '../../DB/ClientDAO.php';
+require_once '../../DB/compteurDAO.php';
+
 $clientDAO = new ClientDAO();
-$clients = $clientDAO->getAllClients();
+$compteurDAO = new CompteurDAO();
+$clients = $clientDAO->getAllClients() ?? [];
 
 $messages = [
-    'clientAdded'  => 'Le client a bien été ajouté.',
-    'clientEdited' => 'Le client a bien été modifié.',
-    'clientDeleted'=> 'Le client a bien été supprimé.',
-    'emptyFields'  => 'Veuillez remplir tous les champs.',
-    'clientFailed' => 'Échec de l’ajout du client.',
-    'editFailed'   => 'Échec de la modification du client.',
-    'deleteFailed' => 'Échec de la suppression du client.',
-    'missingId'    => 'ID du client manquant.'
+    'clientAdded' => 'Le client a été ajouté avec succès.',
+    'clientEdited' => 'Le client a été modifié avec succès.',
+    'clientDeleted' => 'Le client a été supprimé avec succès.',
+    'emptyFields' => 'Veuillez remplir tous les champs.',
+    'clientFailed' => 'Erreur lors de l’ajout du client.',
+    'editFailed' => 'Erreur lors de la modification du client.',
+    'deleteFailed' => 'Erreur lors de la suppression du client.',
+    'missingId' => 'ID du client manquant.'
 ];
 ?>
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -40,16 +44,19 @@ $messages = [
             border-radius: 8px;
             box-shadow: var(--shadow);
         }
+
         .search-container {
             flex-grow: 1;
             position: relative;
         }
+
         .search-container input {
             width: 100%;
             padding: 10px 10px 10px 40px;
             border: 1px solid var(--border-color);
             border-radius: 4px;
         }
+
         .search-container i {
             position: absolute;
             left: 15px;
@@ -57,6 +64,7 @@ $messages = [
             transform: translateY(-50%);
             color: #aaa;
         }
+
         .client-table {
             width: 100%;
             border-collapse: collapse;
@@ -65,23 +73,29 @@ $messages = [
             box-shadow: var(--shadow);
             margin-bottom: 20px;
         }
-        .client-table th, .client-table td {
+
+        .client-table th,
+        .client-table td {
             padding: 12px 15px;
             text-align: left;
         }
+
         .client-table th {
             background-color: #f8f9fa;
             color: var(--primary-color);
             font-weight: bold;
         }
+
         .client-table tr:not(:last-child) {
             border-bottom: 1px solid var(--border-color);
         }
+
         .client-actions {
             display: flex;
             justify-content: center;
             gap: 10px;
         }
+
         .client-actions a {
             cursor: pointer;
             color: var(--secondary-color);
@@ -89,17 +103,21 @@ $messages = [
             border-radius: 4px;
             transition: all 0.2s;
         }
+
         .client-actions a:hover {
             background-color: rgba(52, 152, 219, 0.1);
             color: var(--primary-color);
         }
+
         .client-actions .delete {
             color: var(--danger-color);
         }
+
         .client-actions .delete:hover {
             background-color: rgba(231, 76, 60, 0.1);
             color: darkred;
         }
+
         .modal {
             display: none;
             position: fixed;
@@ -109,8 +127,9 @@ $messages = [
             width: 100%;
             height: 100%;
             overflow: auto;
-            background-color: rgba(0,0,0,0.4);
+            background-color: rgba(0, 0, 0, 0.4);
         }
+
         .modal-content {
             background-color: #fefefe;
             margin: 10% auto;
@@ -120,22 +139,27 @@ $messages = [
             max-width: 500px;
             border-radius: 8px;
         }
+
         .modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
+
         .modal-header .close {
             font-size: 28px;
             cursor: pointer;
         }
+
         .form-group {
             margin-bottom: 15px;
         }
+
         .form-group label {
             display: block;
             margin-bottom: 5px;
         }
+
         .form-group input {
             width: 100%;
             padding: 8px;
@@ -144,6 +168,7 @@ $messages = [
         }
     </style>
 </head>
+
 <body>
     <div class="app-container">
         <!-- Sidebar -->
@@ -172,36 +197,34 @@ $messages = [
                 </a>
             </div>
         </div>
-        
+
         <!-- Main Content -->
         <div class="main-content">
             <h1>Gestion des Clients</h1>
-            
+
             <!-- Affichage des messages mappés -->
-            <?php if(isset($_GET['success'])): 
+            <?php if (isset($_GET['success'])):
                 $message = $messages[$_GET['success']] ?? htmlspecialchars($_GET['success']);
-            ?>
+                ?>
                 <div class="alert alert-success">
                     <?= $message ?>
                 </div>
-            <?php elseif(isset($_GET['error'])): 
+            <?php elseif (isset($_GET['error'])):
                 $message = $messages[$_GET['error']] ?? htmlspecialchars($_GET['error']);
-            ?>
+                ?>
                 <div class="alert alert-danger">
                     <?= $message ?>
                 </div>
             <?php endif; ?>
-            
+
             <div class="filters">
                 <div class="search-container">
                     <i class="fas fa-search"></i>
                     <input type="text" placeholder="Rechercher un client..." id="search-client">
                 </div>
-                <button class="btn btn-primary" id="add-client-btn">
-                    <i class="fas fa-plus"></i> Ajouter un client
-                </button>
+                <button class="btn btn-primary" data-modal="addClientModal">Ajouter un Client</button>
             </div>
-            
+
             <table class="client-table">
                 <thead>
                     <tr>
@@ -209,132 +232,135 @@ $messages = [
                         <th>Nom</th>
                         <th>Adresse</th>
                         <th>Téléphone</th>
+                        <th>Compteurs</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($clients as $client): ?>
-                    <tr>
-                        <td><?= htmlspecialchars($client->getClientId()) ?></td>
-                        <td><?= htmlspecialchars($client->getFullName()) ?></td>
-                        <td><?= htmlspecialchars($client->getAddress()) ?></td>
-                        <td><?= htmlspecialchars($client->getPhone()) ?></td>
-                        <td class="client-actions">
-                            <a class="edit" 
-                               data-client-id="<?= htmlspecialchars($client->getClientId()) ?>" 
-                               data-full-name="<?= htmlspecialchars($client->getFullName()) ?>" 
-                               data-client-phone="<?= htmlspecialchars($client->getPhone()) ?>" 
-                               data-client-address="<?= htmlspecialchars($client->getAddress()) ?>" 
-                               title="Modifier">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            <a class="delete" 
-                               data-client-id="<?= htmlspecialchars($client->getClientId()) ?>" 
-                               title="Supprimer">
-                                <i class="fas fa-trash-alt"></i>
-                            </a>
-                        </td>
-                    </tr>
+                    <?php foreach ($clients as $client):
+                        $compteurs = $compteurDAO->getCompteursByClientId($client->getClientId());
+                        $numeroSeries = array_map(function ($compteur) {
+                            return htmlspecialchars($compteur->getNumeroSerie());
+                        }, $compteurs);
+                        $compteurDisplay = !empty($numeroSeries) ? implode(', ', $numeroSeries) : 'Aucun';
+                        ?>
+                        <tr>
+                            <td><?= htmlspecialchars($client->getClientId()) ?></td>
+                            <td><?= htmlspecialchars($client->getFullName()) ?></td>
+                            <td><?= htmlspecialchars($client->getAddress()) ?></td>
+                            <td><?= htmlspecialchars($client->getPhone()) ?></td>
+                            <td><?= $compteurDisplay ?></td>
+                            <td class="client-actions">
+                                <a class="btn edit open-edit-modal"
+                                    data-client-id="<?= htmlspecialchars($client->getClientId()) ?>"
+                                    data-full-name="<?= htmlspecialchars($client->getFullName()) ?>"
+                                    data-phone="<?= htmlspecialchars($client->getPhone()) ?>"
+                                    data-address="<?= htmlspecialchars($client->getAddress()) ?>"
+                                    data-compteurs="<?= implode(', ', $numeroSeries) ?>"> <i class="fas fa-edit"></i>
+                                </a>
+                                <a class="btn delete"
+                                    href="../../traitement/ClientService.php?action=delete&client_id=<?= htmlspecialchars($client->getClientId()) ?>"
+                                    onclick="return confirm('Confirmez-vous la suppression de ce client ?');"> <i
+                                        class="fas fa-trash-alt"></i>
+                                </a>
+                            </td>
+                        </tr>
                     <?php endforeach; ?>
                 </tbody>
             </table>
         </div>
     </div>
-    
+
     <!-- Modal pour ajouter un client -->
-    <div id="add-client-modal" class="modal">
+    <div id="addClientModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
                 <h2>Ajouter un nouveau client</h2>
                 <span class="close">&times;</span>
             </div>
-            <div class="modal-body">
-                <form id="add-client-form" method="POST" action="../../traitement/ClientService.php?action=add">
-                    <div class="form-group">
-                        <label for="client-name">Nom complet</label>
-                        <input type="text" id="client-name" name="full_name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="client-phone">Téléphone</label>
-                        <input type="tel" id="client-phone" name="phone" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="client-address">Adresse</label>
-                        <input type="text" id="client-address" name="address" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Ajouter</button>
-                </form>
-            </div>
+            <form method="POST" action="../../traitement/ClientService.php?action=add">
+                <div class="form-group">
+                    <label for="add_full_name">Nom complet</label>
+                    <input type="text" id="add_full_name" name="full_name" required>
+                </div>
+                <div class="form-group">
+                    <label for="add_phone">Téléphone</label>
+                    <input type="tel" id="add_phone" name="phone" required>
+                </div>
+                <div class="form-group">
+                    <label for="add_address">Adresse</label>
+                    <input type="text" id="add_address" name="address" required>
+                </div>
+                <div class="form-group">
+                    <label for="add_compteurs">Numéros de compteurs (séparés par des virgules)</label>
+                    <input type="text" id="add_compteurs" name="compteurs" placeholder="Ex: C000000, C111111">
+                </div>
+                <button type="submit" class="btn btn-primary">Ajouter</button>
+            </form>
         </div>
     </div>
-    
+
     <!-- Nouveau modal pour modifier un client -->
-    <div id="edit-client-modal" class="modal">
+    <div id="editClientModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Modifier le client</h2>
-                <span class="close-edit">&times;</span>
+                <h2>Modifier le Client</h2>
+                <span class="close">&times;</span>
             </div>
-            <div class="modal-body">
-                <form id="edit-client-form" method="POST" action="../../traitement/ClientService.php?action=edit">
-                    <input type="hidden" name="client_id" id="edit-client-id">
-                    <div class="form-group">
-                        <label for="edit-client-name">Nom complet</label>
-                        <input type="text" id="edit-client-name" name="full_name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="edit-client-phone">Téléphone</label>
-                        <input type="tel" id="edit-client-phone" name="phone" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="edit-client-address">Adresse</label>
-                        <input type="text" id="edit-client-address" name="address" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Enregistrer</button>
-                </form>
-            </div>
+            <form method="POST" action="../../traitement/ClientService.php?action=edit">
+                <input type="hidden" id="edit_client_id" name="client_id">
+                <div class="form-group">
+                    <label for="edit_full_name">Nom complet</label>
+                    <input type="text" id="edit_full_name" name="full_name" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit_phone">Téléphone</label>
+                    <input type="tel" id="edit_phone" name="phone" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit_address">Adresse</label>
+                    <input type="text" id="edit_address" name="address" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit_compteurs">Numéros de compteurs (séparés par des virgules)</label>
+                    <input type="text" id="edit_compteurs" name="compteurs" placeholder="Ex: C000000, C111111">
+                </div>
+                <button type="submit" class="btn btn-primary">Modifier</button>
+            </form>
         </div>
     </div>
-    
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
     <script>
-        // Gestion de l'ouverture/fermeture du modal d'ajout
-        const modalAdd = document.getElementById("add-client-modal");
-        const btnAdd = document.getElementById("add-client-btn");
-        const spanAdd = document.getElementsByClassName("close")[0];
-        btnAdd.onclick = () => modalAdd.style.display = "block";
-        spanAdd.onclick = () => modalAdd.style.display = "none";
-        window.onclick = event => { if (event.target == modalAdd) modalAdd.style.display = "none"; };
-
-        // Gestion de l'ouverture/fermeture du modal de modification
-        $('.client-actions a.edit').on('click', function() {
-            const client_id = $(this).data('client-id');
-            const full_name = $(this).data('full-name');
-            const phone = $(this).data('client-phone');
-            const address = $(this).data('client-address');
-            $('#edit-client-id').val(client_id);
-            $('#edit-client-name').val(full_name);
-            $('#edit-client-phone').val(phone);
-            $('#edit-client-address').val(address);
-            $('#edit-client-modal').css('display', 'block');
+        // Ouvrir le modal d'ajout
+        document.querySelectorAll('[data-modal="addClientModal"]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                document.getElementById('addClientModal').style.display = 'block';
+            });
         });
-
-        $('.close-edit').on('click', function() {
-            $('#edit-client-modal').css('display', 'none');
+        // Ouvrir le modal de modification et pré-remplir les champs
+        document.querySelectorAll('.open-edit-modal').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                document.getElementById('editClientModal').style.display = 'block';
+                document.getElementById('edit_client_id').value = this.dataset.clientId;
+                document.getElementById('edit_full_name').value = this.dataset.fullName;
+                document.getElementById('edit_phone').value = this.dataset.phone;
+                document.getElementById('edit_address').value = this.dataset.address;
+                document.getElementById('edit_compteurs').value = this.dataset.compteurs;
+            });
         });
-        $(window).on('click', function(event) {
-            if (event.target == document.getElementById('edit-client-modal')) {
-                $('#edit-client-modal').css('display', 'none');
-            }
+        // Fermer les modals
+        document.querySelectorAll('.modal .close').forEach(function (span) {
+            span.addEventListener('click', function () {
+                this.closest('.modal').style.display = 'none';
+            });
         });
-
-        // Gestion de la suppression avec confirmation
-        $('.client-actions a.delete').on('click', function() {
-            const client_id = $(this).data('client-id');
-            if (confirm("Voulez-vous vraiment supprimer ce client ?")) {
-                window.location.href = "../../traitement/ClientService.php?action=delete&client_id=" + client_id;
+        // Fermer le modal en cliquant à l'extérieur
+        window.addEventListener('click', function (event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
             }
         });
     </script>
 </body>
+
 </html>

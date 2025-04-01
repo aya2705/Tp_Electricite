@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once '../DB/ClientDAO.php';
+require_once '../DB/compteurDAO.php';
 
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'fournisseur') {
     header("Location: ../ihm/admin/clients.php");
@@ -10,12 +11,14 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'fournisseur') {
 $action = $_REQUEST['action'] ?? '';
 
 $clientDAO = new ClientDAO();
+$compteurDAO = new CompteurDAO();
 
 switch($action) {
     case 'add':
         $full_name = $_POST['full_name'] ?? '';
         $phone     = $_POST['phone'] ?? '';
         $address   = $_POST['address'] ?? '';
+        $compteursInput = $_POST['compteurs'] ?? '';
 
         if (empty($full_name) || empty($phone) || empty($address)) {
             header("Location: ../ihm/admin/clients.php?error=emptyFields");
@@ -23,7 +26,13 @@ switch($action) {
         }
 
         try {
-            $clientDAO->createClient($full_name, $phone, $address);
+            $newClientId = $clientDAO->createClient($full_name, $phone, $address);
+            if (!empty($compteursInput)) {
+                $compteursArray = array_filter(array_map('trim', explode(',', $compteursInput)));
+                foreach ($compteursArray as $numero) {
+                    $compteurDAO->createCompteur($newClientId, $numero);
+                }
+            }
             header("Location: ../ihm/admin/clients.php?success=clientAdded");
             exit;
         } catch (Exception $e) {
@@ -38,6 +47,7 @@ switch($action) {
         $full_name = $_POST['full_name'] ?? '';
         $phone     = $_POST['phone'] ?? '';
         $address   = $_POST['address'] ?? '';
+        $compteursInput = $_POST['compteurs'] ?? '';
 
         if (!$client_id || empty($full_name) || empty($phone) || empty($address)) {
             header("Location: ../ihm/admin/clients.php?error=emptyFields");
@@ -46,6 +56,13 @@ switch($action) {
 
         try {
             $clientDAO->updateClient($client_id, $full_name, $phone, $address);
+            $compteurDAO->deleteCompteursByClientId($client_id);
+            if (!empty($compteursInput)) {
+                $compteursArray = array_filter(array_map('trim', explode(',', $compteursInput)));
+                foreach ($compteursArray as $numero) {
+                    $compteurDAO->createCompteur($client_id, $numero);
+                }
+            }
             header("Location: ../ihm/admin/clients.php?success=clientEdited");
             exit;
         } catch (Exception $e) {
@@ -63,6 +80,7 @@ switch($action) {
         }
 
         try {
+            $compteurDAO->deleteCompteursByClientId($client_id);
             $clientDAO->deleteClient($client_id);
             header("Location: ../ihm/admin/clients.php?success=clientDeleted");
             exit;

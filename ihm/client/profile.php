@@ -6,9 +6,13 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'client') {
 }
 
 require_once '../../DB/ClientDAO.php';
+require_once '../../DB/compteurDAO.php';
 
 $clientDAO = new ClientDAO();
+$compteurDAO = new CompteurDAO();
+
 $client = $clientDAO->getClientByUserId($_SESSION['user_id']);
+$compteurs = $client ? $compteurDAO->getCompteursByClientId($client->getClientId()) : [];
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -78,6 +82,26 @@ $client = $clientDAO->getClientByUserId($_SESSION['user_id']);
             height: 400px;
             margin-top: 20px;
         }
+
+        .compteur-list {
+            margin-top: 20px;
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .compteur-list h3 {
+            margin-bottom: 10px;
+        }
+
+        .compteur-item {
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .compteur-item:last-child {
+            border-bottom: none;
+        }
     </style>
 </head>
 
@@ -140,6 +164,20 @@ $client = $clientDAO->getClientByUserId($_SESSION['user_id']);
                     </div>
                     <!-- Vous pouvez ajouter d'autres informations dynamiques ici -->
                 </div>
+            </div>
+
+            <!-- Affichage des compteurs associés -->
+            <div class="compteur-list">
+                <h3>Mes Compteurs</h3>
+                <?php if(count($compteurs) > 0): ?>
+                    <?php foreach($compteurs as $compteur): ?>
+                        <div class="compteur-item">
+                            <strong>Numéro de série :</strong> <?= htmlspecialchars($compteur->getNumeroSerie()) ?>
+                        </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <p>Aucun compteur associé.</p>
+                <?php endif; ?>
             </div>
         </div>
     </div>
