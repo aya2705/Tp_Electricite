@@ -7,11 +7,11 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'client') {
     exit;
 }
 
+$clientId = $_SESSION['client_id'];
 require_once '../../traitement/consommationService.php';
 
 $consommationService = new ConsommationService();
-$lastConsumption = $consommationService->getLastMonthlyConsumption($_SESSION['user_id']);
-
+$lastConsumption = $consommationService->getLastMonthlyConsumption($clientId);
 // Formatage de la date pour l'affichage
 $consumptionDate = !empty($lastConsumption) ? date('F Y', strtotime($lastConsumption->getCreatedAt())) : 'N/A';
 $consumptionValue = !empty($lastConsumption) ? $lastConsumption->getKw() : 0;

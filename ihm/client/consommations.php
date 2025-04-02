@@ -38,10 +38,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             if (move_uploaded_file($_FILES['meter-photo']['tmp_name'], $imagePath)) {
                 $consumption = new ConsommationMensuelle($kw, $imagePath);
+                echo $consumption->getKw();
                 echo "<p>photo saved to directory and object created now calling the service to persist the consumption</p>";
                 $result = $consommationService->submitConsommationMensuelle($clientId, $consumption);
+                 
                 if ($result) {
-                    header('Location: dashboard.php');
+                    echo "Good";
+                    header('Location: consommations.php');
                     exit;
                 }
             } else {
@@ -280,7 +283,7 @@ $imagePath = $lastConsumption ? $lastConsumption->getImagePath() : '';
                 <img src="" id="modal-image" style="width: 100%;">
             </div>
         </div>
-    </div>9
+    </div>
     
     <script src="../../assets/js/main.js"></script>
     <script src="js/consumption.js"></script>

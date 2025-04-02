@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../DB/consommationDAO.php';
 require_once __DIR__ . '/../models/consommationMensuelle.php';
+require_once __DIR__ . '/../models/monthlyConsumptionAnomaly.php'; // Include the anomaly model
 // as a client i need to submit a monthly submission (kw + image)
 // when i submit a new monthly consumption (it should be stored in the data base (monthly consumption)) 
 // i need a function that will take in the clientId and the consumption oject
@@ -17,47 +18,81 @@ class consommationService {
         $this->consommationRepository = new ConsommationDAO();
     }
 
-    // this function will return the lastly submitted consumption (works well)
-    public function getLastMonthlyConsumption($clientId){
-        return $this->consommationRepository->getLastSubmittedConsumption($clientId);
+    public function getLastMonthlyConsumption($clientId)
+    {
+        return $this->consommationRepository->getLastNormalConsumption($clientId);
     }
 
-    // as a client i want to submit a cosommation mensuelle, if no anomalie is detected we create a facture and generate it, if an anomalie is detected the consumption is flagged and no facture is created
-    // either ways the consommation is persisted 
-    public function submitConsommationMensuelle($clientId, $consommationMensuelle) { 
-        // here we should call the checkForAnomalieMensuelle to check for an anomalie
-        /*
-        if(checkForAnomalieMensuelle($clientId,$consommationMensuelle->kw)) {
-              // if an anomalie is detected we :
-                    // set consommation mensuelle (isAbnormal -> true)
-                    // persist it, this returns the persisted consumption
-                    persistedConsumption = consommationRepository.saveConsumption($clientId, $consommationMensuelle)
-                    // return a message that signals to the user that the submitted consumption is abnormal.
+    public function submitConsommationMensuelle($clientId, $consommationMensuelle)
+    {
+        $lastNormalConsumption = $this->consommationRepository->getLastNormalConsumption($clientId);
+        $previousKw = $lastNormalConsumption ? $lastNormalConsumption->getKw() : 0;
+        $currentKw = $consommationMensuelle->getKw();
+        $isAnomaly = $this->checkForMonthlyConsumptionAnomaly($clientId, $currentKw);
+
+        $saveResult = $this->consommationRepository->saveConsumption($clientId, $consommationMensuelle);
+        $persistedConsumption = $saveResult['consumption'];
+        $compteurId = $saveResult['compteur_id'];
+
+        if ($isAnomaly) {
+            $difference = abs($currentKw - $previousKw);
+            $previousId = $lastNormalConsumption ? $lastNormalConsumption->getId() : null;
+            $clientName = $this->consommationRepository->getClientName($clientId);
+            $entryDate = $persistedConsumption->getCreatedAt();
+            $previousValue = $previousKw;
+            $enteredValue = $currentKw;
+            $imagePath = $persistedConsumption->getImagePath();
+
+            $this->consommationRepository->createAnomaly(
+                $persistedConsumption->getId(),
+                $previousId,
+                $clientName,
+                $compteurId,
+                $entryDate,
+                $previousValue,
+                $enteredValue,
+                $difference,
+                $imagePath
+            );
+            return ['status' => 'anomaly', 'consumption' => $persistedConsumption];
         } else {
-              // if no anomalie is detected we will create a new consumption with isAbnormal set to false
-              // we will save it in the database using "consommationRepository.saveConsumption($clientId, $consommationMensuelle)"
-              // we will catch the persisted consumption
-              // we will call the facturationService to create a factureMensuelle and link it to the user in the database
-              // factureService.createFactureMensuelle($clientId, consommationMensuelle) 
+            // Generate invoice, etc.
+            return ['status' => 'normal', 'consumption' => $persistedConsumption];
         }
-        */
-        // For now, we'll assume no anomalies
-        echo "reached the service method that persists the consumption now calling DAO";
-        return $this->consommationRepository->saveConsumption($clientId, $consommationMensuelle);
     }
 
-    // this function checks if there is an abnormal difference between the last consumption and the new submitted one it either returns true or false  
-    public function checkForMonthlyConsumptionAnomaly($clientId, $kw) {
-        // here we will retrieve the last consumption submitted by this client 
-        //$consumption = consommationRepository.getLastSubmittedConsumption($clientId)
-        // then we will compare $consumption->kw with $kw if the difference is big we will return true
-        // else we return false
+    private function checkForMonthlyConsumptionAnomaly($clientId, $kw)
+    {
+        $lastNormalConsumption = $this->consommationRepository->getLastNormalConsumption($clientId);
+        if (!$lastNormalConsumption) {
+            return false; // No previous consumption to compare with
+        }
+        $previousKw = $lastNormalConsumption->getKw();
+        return $kw >= $previousKw * 10 || $kw <= $previousKw * 0.1;
     }
 
-    // as a Fournisseur i need all abnormal monthly consumptions
-    public function getAllMonthlyConsumptionsWithAnomaly() {
-        // this will return all monthly consumptions that have isAbnormal set to true
-        // consommationRepository.getAllAbnormalMonthlyConsumptions() 
+    public function getAllMonthlyConsumptionsWithAnomaly()
+    {
+        $anomaliesData = $this->consommationRepository->getAllAnomalies();
+        $anomalies = [];
+        
+        foreach ($anomaliesData as $data) {
+            $anomaly = new MonthlyConsumptionAnomaly();
+            
+            $anomaly->setAnomalyId($data['anomalie_id'] ?? null);
+            $anomaly->setClientName($data['client_name'] ?? 'Inconnu');
+            $anomaly->setMeterId($data['compteur_id'] ?? 'N/A');
+            $anomaly->setEntryDate($data['entry_date'] ?? null);
+            $anomaly->setPreviousValue($data['previous_value'] ?? 0);
+            $anomaly->setEnteredValue($data['entered_value'] ?? 0);
+            $anomaly->setDifference($data['difference'] ?? 0);
+            $anomaly->setStatus($data['status'] ?? 'En attente');
+            $anomaly->setClientId(null); // Not provided by DAO
+            
+            $anomalies[] = $anomaly;
+        }
+        
+        return $anomalies;
     }
 
     // as a Fournisseur after viewing the anomaly i need to correct it by updating the consumption and generating the facture
