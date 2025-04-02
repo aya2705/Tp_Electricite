@@ -110,9 +110,9 @@
                              <button class="action-process" data-id="REF-<?php echo $reclamation['reclamation_id']; ?>" title="Traiter">
                                  <i class="fas fa-tools"></i>
                              </button>
-                             <button class="action-resolve" data-id="REF-<?php echo $reclamation['reclamation_id']; ?>" title="Marquer comme résolu">
+                             <!-- <button class="action-resolve" data-id="REF-<?php echo $reclamation['reclamation_id']; ?>" title="Marquer comme résolu">
                                  <i class="fas fa-check"></i>
-                             </button>
+                             </button> -->
                          </div>
                          <span class="claim-status <?php echo 'status-' . $reclamation['statut']; ?>">
                              <?php echo ucfirst($reclamation['statut']); ?>
@@ -178,27 +178,38 @@
                             <option value="facture_correcte">Facture - Montant correct</option>
                         </select>
                     </div>
-                    <form id="response-form">
-                            <div class="form-group">
-                                <label for="response-text">Réponse:</label>
-                                <textarea id="response-text" rows="10" class="form-control" required></textarea>
+                    <form id="response-form" method="POST" action="../../traitement/ReclamationService.php">
+                        <input type="hidden" name="action" value="respond">
+                        <input type="hidden" name="reclamation_id" value="<?= $reclamation_id ?? ''; ?>">
+
+                        <div class="form-group">
+                            <label for="response-text">Réponse:</label>
+                            <textarea id="response-text" rows="10" name="response_text" class="form-control" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Statut:</label>
+                            <div>
+                                <label class="radio-inline">
+                                    <input type="radio" name="claim_status" value="processing" checked> En traitement
+                                </label>
+                                <label class="radio-inline" style="margin-left: 15px;">
+                                    <input type="radio" name="claim_status" value="resolved"> Résolue
+                                </label>
                             </div>
-                            <div class="form-group">
-                                <label>Statut:</label>
-                                <div>
-                                    <label class="radio-inline">
-                                        <input type="radio" name="claim-status" value="processing" checked> En traitement
-                                    </label>
-                                    <label class="radio-inline" style="margin-left: 15px;">
-                                        <input type="radio" name="claim-status" value="resolved"> Résolue
-                                    </label>
-                                </div>
-                            </div>
-                            
-                            <div class="form-actions">
-                                <button type="submit" class="btn btn-primary">Envoyer la réponse</button>
-                            </div>
-                        </form>
+                        </div>
+    
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Envoyer la réponse</button>
+                        </div>
+                    </form>
+                    <?php if (isset($_GET['success'])): ?>
+                        <div class="alert alert-success">Réponse envoyée et statut mis à jour !</div>
+                    <?php endif; ?>
+
+                    <?php if (isset($_GET['error'])): ?>
+                        <div class="alert alert-danger"><?= htmlspecialchars($_GET['error']); ?></div>
+                    <?php endif; ?>
+
                 </div>
             </div>
         </div>
@@ -238,6 +249,9 @@
         }
     });
 });
+
+
+   
 
 
  </script>

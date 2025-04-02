@@ -9,25 +9,26 @@
         $type = htmlspecialchars($_POST['claim_type']);
         $description = htmlspecialchars($_POST['description']);
         $statut = 'en_attente';
-        $pieces_jointes = null;
 
-        if (!empty($_FILES['attachments']['name'][0])) {
-            $uploadDir = '../ihm/Reclamation/uploads/';
-            $uploadedFiles = [];
+        // Ajouter la réclamation et récupérer son ID
+        $reclamation_id = Reclamation::addReclamation($client_id, $type, $description, $statut);
 
-            foreach ($_FILES['attachments']['tmp_name'] as $key => $tmpName) {
-                $fileName = time() . "_" . basename($_FILES['attachments']['name'][$key]);
-                $targetFilePath = $uploadDir . $fileName;
+        if ($reclamation_id) {
+            // Gérer les pièces jointes
+            if (!empty($_FILES['attachments']['name'][0])) {
+                $uploadDir = '../ihm/Reclamation/uploads/';
 
-                if (move_uploaded_file($tmpName, $targetFilePath)) {
-                    $uploadedFiles[] = $fileName;
+                foreach ($_FILES['attachments']['tmp_name'] as $key => $tmpName) {
+                    $fileName = time() . "_" . basename($_FILES['attachments']['name'][$key]);
+                    $targetFilePath = $uploadDir . $fileName;
+
+                    if (move_uploaded_file($tmpName, $targetFilePath)) {
+                        // Ajouter chaque fichier à la base de données
+                        Reclamation::addPieceJointe($reclamation_id, $fileName, $_FILES['attachments']['type'][$key]);
+                    }
                 }
             }
 
-            $pieces_jointes = implode(',', $uploadedFiles);
-        }
-
-        if (Reclamation::addReclamation($client_id, $type, $description, $statut, $pieces_jointes)) {
             header("Location: ../ihm/Reclamation/claims.php");
             exit;
         } else {
@@ -37,6 +38,7 @@
         echo "Erreur : " . $e->getMessage();
     }
 }
+
  // Pour afficher les détails de la réclamation dans le modal
 
  $reclamationId = $_GET['reclamationId'] ?? $_POST['reclamationId'] ?? null;
@@ -49,7 +51,9 @@ if ($reclamationId) { // Vérifie si la variable est définie
             $claimDescription = $reclamation['description'];
             $claimDate = $reclamation['date_creation'];
             $claimType = ucfirst($reclamation['type']);
-            $piecesJointes = isset($reclamation['pieces_jointes']) ? explode(',', $reclamation['pieces_jointes']) : [];
+            $piecesJointes = isset($reclamation['pieces_jointes']) && is_array($reclamation['pieces_jointes']) 
+                ? array_map(fn($piece) => $piece['file_path'], $reclamation['pieces_jointes']) 
+                : [];
             
             $client = Reclamation::getClientById($clientId);
 
