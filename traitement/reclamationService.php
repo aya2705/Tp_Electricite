@@ -1,9 +1,11 @@
 <?php
- require_once '../DB/models/Reclamation.php';
+ require_once '../DB/models/ReclamationDAO.php';
  session_start();
  
  // Si l'action est l'ajout de réclamation
- if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['action'] === 'add') {
+ 
+
+ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['action']) && $_POST['action'] === 'add') {
     try {
         $client_id = $_SESSION['client_id'] ?? 1;
         $type = htmlspecialchars($_POST['claim_type']);
@@ -11,12 +13,14 @@
         $statut = 'en_attente';
 
         // Ajouter la réclamation et récupérer son ID
-        $reclamation_id = Reclamation::addReclamation($client_id, $type, $description, $statut);
+        $reclamation_id = ReclamationDAO::addReclamation($client_id, $type, $description, $statut);
 
         if ($reclamation_id) {
+            $_SESSION['reclamation_id'] = $reclamation_id; // Stocker en session
+
             // Gérer les pièces jointes
             if (!empty($_FILES['attachments']['name'][0])) {
-                $uploadDir = '../ihm/Reclamation/uploads/';
+                $uploadDir = '../ihm/Reclamation/client/uploads/';
 
                 foreach ($_FILES['attachments']['tmp_name'] as $key => $tmpName) {
                     $fileName = time() . "_" . basename($_FILES['attachments']['name'][$key]);
@@ -24,29 +28,33 @@
 
                     if (move_uploaded_file($tmpName, $targetFilePath)) {
                         // Ajouter chaque fichier à la base de données
-                        Reclamation::addPieceJointe($reclamation_id, $fileName, $_FILES['attachments']['type'][$key]);
+                        ReclamationDAO::addPieceJointe($reclamation_id, $fileName, $_FILES['attachments']['type'][$key]);
                     }
                 }
             }
 
-            header("Location: ../ihm/Reclamation/claims.php");
+            echo "Réclamation ajoutée avec succès. ID: " . $reclamation_id;
             exit;
         } else {
-            echo "Erreur lors de l'ajout de la réclamation.";
+            throw new Exception("Erreur lors de l'ajout de la réclamation.");
         }
     } catch (Exception $e) {
         echo "Erreur : " . $e->getMessage();
     }
 }
 
+
+
+
  // Pour afficher les détails de la réclamation dans le modal
 
- $reclamationId = $_GET['reclamationId'] ?? $_POST['reclamationId'] ?? null;
-if ($reclamationId) { // Vérifie si la variable est définie
+ $reclamationId = isset($_GET['reclamationId']) ? $_GET['reclamationId'] : null;
 
+if ($reclamationId && filter_var($reclamationId, FILTER_VALIDATE_INT)) {
     try {
-        $reclamation = Reclamation::getReclamationById($reclamationId);
+        $reclamation = ReclamationDAO::getReclamationById($reclamationId);
         if ($reclamation) {
+            // Traitement de la réclamation récupérée
             $clientId = $reclamation['client_id'];
             $claimDescription = $reclamation['description'];
             $claimDate = $reclamation['date_creation'];
@@ -55,9 +63,9 @@ if ($reclamationId) { // Vérifie si la variable est définie
                 ? array_map(fn($piece) => $piece['file_path'], $reclamation['pieces_jointes']) 
                 : [];
             
-            $client = Reclamation::getClientById($clientId);
+            $client = ReclamationDAO::getClientById($clientId);
 
-// Vérifier si $client contient bien des données avant de l'utiliser
+            // Vérifier si $client contient bien des données avant de l'utiliser
             if ($client && is_array($client)) {
                 $clientName = htmlspecialchars($client['full_name'] ?? 'Non renseigné');
                 $clientEmail = htmlspecialchars($client['email'] ?? 'Non renseigné');
@@ -84,10 +92,11 @@ if ($reclamationId) { // Vérifie si la variable est définie
                         <div class='claim-description'>$claimDescription</div>
                         <p><strong>Pièces jointes:</strong></p>
                         <div class='attachments'>";
+
                 if (!empty($piecesJointes[0])) {
                     foreach ($piecesJointes as $attachment) {
                         echo "<div class='attachment'>
-                                <i class='fas fa-paperclip'></i> <a  href='../Reclamation/uploads/$attachment'  target='_blank'>$attachment</a>
+                                <i class='fas fa-paperclip'></i> <a href='../client/uploads/$attachment' target='_blank'>$attachment</a>
                               </div>";
                     }
                 } else {
@@ -103,11 +112,35 @@ if ($reclamationId) { // Vérifie si la variable est définie
     } catch (Exception $e) {
         echo "<p style='color: red;'>Erreur : " . $e->getMessage() . "</p>";
     }
+} else {
+    echo "L'ID de réclamation est invalide ou manquant.";
 }
 
- 
- 
 
- 
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["action"]) && $_POST["action"] === "respond") {
+    $reclamation_id = isset($_POST["reclamation_id"]) ? intval($_POST["reclamation_id"]) : 0;
+    $response_text = isset($_POST["response_text"]) ? trim($_POST["response_text"]) : '';
+    $claim_status = isset($_POST["claim_status"]) ? $_POST["claim_status"] : 'en_traitement';
+
+    if ($reclamation_id <= 0 || empty($response_text)) {
+        die("Erreur: ID de réclamation ou texte de réponse invalide.");
+    }
+
+    if (!ReclamationDAO::traiterReponse($reclamation_id, $response_text, $claim_status)) {
+        error_log("Échec du traitement de la réclamation ID: $reclamation_id, Statut: $claim_status, Réponse: $response_text");
+        die("Erreur lors du traitement de la réclamation.");
+    } else {
+        header("Location: ../ihm/Reclamation/admin/claims-frs.php");
+        exit;
+    }
+}
+
+// Récupérer les réclamations lorsque la page est visitée sans POST
+$client_id = $_SESSION['client_id'] ?? 1;
+$reclamations = ReclamationDAO::getReclamationsByClientId($client_id);
+
+// Stocker les réclamations dans la session pour les utiliser dans la page d'affichage
+$_SESSION['reclamations'] = $reclamations;
+
 
  ?>
