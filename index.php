@@ -1,16 +1,8 @@
 <?php
 session_start();
 
-// Si l'utilisateur est déjà connecté, rediriger vers le tableau de bord approprié
-if (isset($_SESSION['user_id'])) {
-    if ($_SESSION['role'] === 'fournisseur') {
-        header('Location: ihm/admin/dashboard.php');
-        exit;
-    } else {
-        header('Location: ihm/client/dashboard.php');
-        exit;
-    }
-}
-
-// Sinon, afficher la page de connexion
-include_once 'ihm/connexion.php';
+// here i set manually a session so i can authenticate
+$_SESSION['user_id'] = 1;
+$_SESSION['role'] = 'client';
+// with an authentication system i should log in then if my account is registered then i will go the clients dashboard
+header('Location: ihm/client/dashboard.php');

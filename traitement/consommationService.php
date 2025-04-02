@@ -17,6 +17,11 @@ class consommationService {
         $this->consommationRepository = new ConsommationDAO();
     }
 
+    // this function will return the lastly submitted consumption (works well)
+    public function getLastMonthlyConsumption($clientId){
+        return $this->consommationRepository->getLastSubmittedConsumption($clientId);
+    }
+
     // as a client i want to submit a cosommation mensuelle, if no anomalie is detected we create a facture and generate it, if an anomalie is detected the consumption is flagged and no facture is created
     // either ways the consommation is persisted 
     public function submitConsommationMensuelle($clientId, $consommationMensuelle) { 
@@ -37,8 +42,8 @@ class consommationService {
         }
         */
         // For now, we'll assume no anomalies
+        echo "reached the service method that persists the consumption now calling DAO";
         return $this->consommationRepository->saveConsumption($clientId, $consommationMensuelle);
-    
     }
 
     // this function checks if there is an abnormal difference between the last consumption and the new submitted one it either returns true or false  
@@ -60,11 +65,5 @@ class consommationService {
         // here we should retrieve the consumption 
         // correctConsumption($consumptionId, $correctedConsumptionKW, true) // the true is for is abnormal
         // then we should create a facture for this corrected consumption
-
-    }
-
-    // this function will return the lastly submitted consumption
-    public function getLastMonthlyConsumption($clientId){
-      return $this->consommationRepository->getLastSubmittedConsumption($clientId);
     }
 }

@@ -12,6 +12,8 @@ require_once '../../models/consommationMensuelle.php';
 
 $consommationService = new ConsommationService();
 $lastConsumption = $consommationService->getLastMonthlyConsumption($_SESSION['user_id']);
+$consumptionDate = !empty($lastConsumption) ? date('F Y', strtotime($lastConsumption->getCreatedAt())) : 'N/A';
+$consumptionValue = !empty($lastConsumption) ? $lastConsumption->getKw() : 0;
 
 // Handle form submission
 $message = '';
@@ -34,12 +36,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             if (move_uploaded_file($_FILES['meter-photo']['tmp_name'], $imagePath)) {
                 $consumption = new ConsommationMensuelle($kw, $imagePath);
+                echo "<p>photo saved to directory and object created now calling the service to persist the consumption</p>";
                 $result = $consommationService->submitConsommationMensuelle($_SESSION['user_id'], $consumption);
-                
                 if ($result) {
-                    $message = 'Consommation enregistrée avec succès';
-                    $messageType = 'success';
-                    // Redirect after successful submission
                     header('Location: dashboard.php');
                     exit;
                 }
@@ -215,11 +214,8 @@ $imagePath = $lastConsumption->getImagePath();
                     <form id="consumption-form" method="POST" action="consommations.php" enctype="multipart/form-data">
                         <div class="form-group">
                             <label for="current-value">Valeur actuelle du compteur (kWh)</label>
-                            <input type="number" name="current-value" id="current-value" required 
-                                   >
-                            <small>La valeur doit être supérieure à la précédente lecture (<?php echo $consumptionValue; ?> kWh)</small>
+                            <input type="number" name="current-value" id="current-value" required>
                         </div>
-
                         <div class="form-group">
                             <label>Photo du compteur</label>
                             <div class="upload-container">
