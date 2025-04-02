@@ -31,13 +31,11 @@ $compteurs = $client ? $compteurDAO->getCompteursByClientId($client->getClientId
             padding: 30px;
             margin-bottom: 30px;
         }
-
         .profile-header {
             display: flex;
             align-items: center;
             margin-bottom: 30px;
         }
-
         .profile-avatar {
             width: 100px;
             height: 100px;
@@ -50,18 +48,15 @@ $compteurs = $client ? $compteurDAO->getCompteursByClientId($client->getClientId
             font-size: 40px;
             margin-right: 20px;
         }
-
         .profile-details h2 {
             margin: 0 0 5px 0;
             color: var(--primary-color);
         }
-
         .info-row {
             display: flex;
             align-items: center;
             margin-bottom: 20px;
         }
-
         .info-label {
             width: 30%;
             font-weight: bold;
@@ -77,7 +72,6 @@ $compteurs = $client ? $compteurDAO->getCompteursByClientId($client->getClientId
             cursor: pointer;
             margin-left: 10px;
         }
-
         .chart-container {
             height: 400px;
             margin-top: 20px;
