@@ -94,23 +94,6 @@ document.addEventListener('DOMContentLoaded', function() {
         return priceHT;
     }
     
-    // Soumission du formulaire
-    if (consumptionForm) {
-        consumptionForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            if (!fileInput || !currentValueInput) return;
-            
-            if (!currentValueInput.value || !fileInput.files.length) {
-                showAlert('Veuillez compléter tous les champs requis', 'warning');
-                return;
-            }
-            
-            showAlert('Saisie enregistrée avec succès', 'success');
-            setTimeout(() => window.location.href = 'dashboard.php', 1500);
-        });
-    }
-    
     // Fonction pour afficher la photo en modal
     window.openPhotoModal = function(src) {
         const modalImage = document.getElementById('modal-image');
