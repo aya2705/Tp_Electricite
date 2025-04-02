@@ -15,9 +15,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Constantes de tarification
     const TARIFS = {
-        tranche1: { max: 100, prix: 100 },   // 0-100 kWh à 100 Dh/kWh
-        tranche2: { max: 300, prix: 90 },    // 101-300 kWh à 90 Dh/kWh
-        tranche3: { prix: 80 }                // > 300 kWh à 80 Dh/kWh
+        tranche1: { max: 100, prix: 100 },   // 0-100 kWh à 100 MAD/kWh
+        tranche2: { max: 300, prix: 90 },    // 101-300 kWh à 90 MAD/kWh
+        tranche3: { prix: 80 }                // > 300 kWh à 80 MAD/kWh
     };
     const TVA_RATE = 0.18;
     

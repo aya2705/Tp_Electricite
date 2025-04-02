@@ -136,7 +136,7 @@ $consumptionValue = !empty($lastConsumption) ? $lastConsumption->getKw() : 0;
                 </div>
                 <div class="stat-card">
                     <h3>Dernière Facture</h3>
-                    <div class="value">32,500 Dh</div>
+                    <div class="value">32,500 MAD</div>
                     <p>Novembre 2023</p>
                 </div>
                 <div class="stat-card">
@@ -166,7 +166,7 @@ $consumptionValue = !empty($lastConsumption) ? $lastConsumption->getKw() : 0;
                             <td>15/11/2023</td>
                             <td>FACT-2023-11</td>
                             <td>325 kWh</td>
-                            <td>32,500 Dh</td>
+                            <td>32,500 MAD</td>
                             <td><span class="status-badge status-paid">Payée</span></td>
                             <td>
                                 <a href="#" class="download-btn"><i class="fas fa-file-pdf"></i> PDF</a>
@@ -176,7 +176,7 @@ $consumptionValue = !empty($lastConsumption) ? $lastConsumption->getKw() : 0;
                             <td>15/10/2023</td>
                             <td>FACT-2023-10</td>
                             <td>315 kWh</td>
-                            <td>31,500 Dh</td>
+                            <td>31,500 MAD</td>
                             <td><span class="status-badge status-paid">Payée</span></td>
                             <td>
                                 <a href="#" class="download-btn"><i class="fas fa-file-pdf"></i> PDF</a>
@@ -186,7 +186,7 @@ $consumptionValue = !empty($lastConsumption) ? $lastConsumption->getKw() : 0;
                             <td>15/09/2023</td>
                             <td>FACT-2023-09</td>
                             <td>330 kWh</td>
-                            <td>33,000 Dh</td>
+                            <td>33,000 MAD</td>
                             <td><span class="status-badge status-paid">Payée</span></td>
                             <td>
                                 <a href="#" class="download-btn"><i class="fas fa-file-pdf"></i> PDF</a>

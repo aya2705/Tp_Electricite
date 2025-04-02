@@ -1,20 +1,19 @@
 <?php
 session_start();
 
-// Check if user is logged in and is a client
+// Vérifier que le client est authentifié via $_SESSION['user_id']
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'client') {
     header('Location: ../connexion.php');
     exit;
 }
+
 require_once '../../traitement/consommationService.php';
 require_once '../../models/consommationMensuelle.php';
-require_once '../../DB/ClientDAO.php';
 
-$clientDAO = new ClientDAO();
-$client = $clientDAO->getClientByUserId($_SESSION['user_id']);
+$clientId = $_SESSION['client_id'];
 
 $consommationService = new ConsommationService();
-$lastConsumption = $consommationService->getLastMonthlyConsumption($client->getClientId());
+$lastConsumption = $consommationService->getLastMonthlyConsumption($clientId);
 $consumptionDate = !empty($lastConsumption) ? date('F Y', strtotime($lastConsumption->getCreatedAt())) : 'N/A';
 $consumptionValue = !empty($lastConsumption) ? $lastConsumption->getKw() : 0;
 $imagePath = $lastConsumption ? $lastConsumption->getImagePath() : '';
@@ -23,7 +22,6 @@ $imagePath = $lastConsumption ? $lastConsumption->getImagePath() : '';
 $message = '';
 $messageType = '';
 
-/*This code processes a form submission that includes both a meter reading value and a photo of the meter, saves the photo to the server, and creates a new consumption record with both pieces of information.*/
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $kw = filter_input(INPUT_POST, 'current-value', FILTER_VALIDATE_FLOAT);
@@ -41,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (move_uploaded_file($_FILES['meter-photo']['tmp_name'], $imagePath)) {
                 $consumption = new ConsommationMensuelle($kw, $imagePath);
                 echo "<p>photo saved to directory and object created now calling the service to persist the consumption</p>";
-                $result = $consommationService->submitConsommationMensuelle($_SESSION['user_id'], $consumption);
+                $result = $consommationService->submitConsommationMensuelle($clientId, $consumption);
                 if ($result) {
                     header('Location: dashboard.php');
                     exit;
@@ -244,15 +242,15 @@ $imagePath = $lastConsumption ? $lastConsumption->getImagePath() : '';
                                 </div>
                                 <div class="summary-item">
                                     <span>Prix HT</span>
-                                    <span id="price-ht">0 Dh</span>
+                                    <span id="price-ht">0 MAD</span>
                                 </div>
                                 <div class="summary-item">
                                     <span>TVA (18%)</span>
-                                    <span id="price-tva">0 Dh</span>
+                                    <span id="price-tva">0 MAD</span>
                                 </div>
                                 <div class="summary-item summary-total">
                                     <span>Total TTC</span>
-                                    <span id="price-ttc">0 Dh</span>
+                                    <span id="price-ttc">0 MAD</span>
                                 </div>
                             </div>
                         </div>

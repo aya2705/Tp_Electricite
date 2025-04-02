@@ -25,6 +25,14 @@ switch ($action) {
             if ($user && password_verify($password, $user->getPasswordHash())) {
                 $_SESSION['user_id'] = $user->getUserId();
                 $_SESSION['role'] = $user->getRole();
+                if ($user->getRole() === 'client') {
+                    // Récupérer le client pour stocker son ID dans la session
+                    $clientDAO = new ClientDAO();
+                    $client = $clientDAO->getClientByUserId($user->getUserId());
+                    if ($client) {
+                        $_SESSION['client_id'] = $client->getClientId();
+                    }
+                }
                 $redirect = $user->getRole() === 'fournisseur' ? '../ihm/admin/dashboard.php' : '../ihm/client/dashboard.php';
                 header("Location: $redirect");
                 exit;
