@@ -8,6 +8,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'client') {
 }
 
 require_once '../../traitement/consommationService.php';
+require_once '../../models/consommationMensuelle.php';
 
 $consommationService = new ConsommationService();
 $lastConsumption = $consommationService->getLastMonthlyConsumption($_SESSION['user_id']);
@@ -16,6 +17,7 @@ $lastConsumption = $consommationService->getLastMonthlyConsumption($_SESSION['us
 $message = '';
 $messageType = '';
 
+/*This code processes a form submission that includes both a meter reading value and a photo of the meter, saves the photo to the server, and creates a new consumption record with both pieces of information.*/
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $kw = filter_input(INPUT_POST, 'current-value', FILTER_VALIDATE_FLOAT);
@@ -210,7 +212,7 @@ $imagePath = $lastConsumption->getImagePath();
                         </div>
                     </div>
 
-                    <form id="consumption-form" method="POST" action="" enctype="multipart/form-data">
+                    <form id="consumption-form" method="POST" action="consommations.php" enctype="multipart/form-data">
                         <div class="form-group">
                             <label for="current-value">Valeur actuelle du compteur (kWh)</label>
                             <input type="number" name="current-value" id="current-value" required 
@@ -224,9 +226,6 @@ $imagePath = $lastConsumption->getImagePath();
                                 <i class="fas fa-camera fa-2x"></i>
                                 <p>Déposez votre photo ici ou</p>
                                 <input type="file" name="meter-photo" id="meter-photo" accept="image/*" required>
-                                <button type="button" class="btn btn-secondary" id="select-photo-btn">
-                                    Sélectionner une photo
-                                </button>
                             </div>
                             <div class="upload-preview" id="photo-preview">
                                 <img src="" alt="Aperçu">
@@ -285,8 +284,26 @@ $imagePath = $lastConsumption->getImagePath();
         </div>
     </div>
 
-    <script src="../assets/js/main.js"></script>
-    <script src="js/consumption.js"></script>
+    <!-- Only keep JS needed for photo preview -->
+    <script>
+        document.getElementById('select-photo-btn').onclick = () => document.getElementById('meter-photo').click();
+        document.getElementById('meter-photo').onchange = function() {
+            const preview = document.getElementById('photo-preview');
+            const img = preview.querySelector('img');
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    img.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(this.files[0]);
+            }
+        };
+        document.getElementById('remove-photo-btn').onclick = () => {
+            document.getElementById('meter-photo').value = '';
+            document.getElementById('photo-preview').style.display = 'none';
+        };
+    </script>
 </body>
 
 </html>

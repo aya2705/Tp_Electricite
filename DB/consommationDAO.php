@@ -9,7 +9,6 @@ private $db;
 
     // returns persisted consumption
     public function saveConsumption($clientId, $consommationMensuelle) {
-        // Simulate database storage
         $consumption = new ConsommationMensuelle(
             $consommationMensuelle->getKw(),
             $consommationMensuelle->getImagePath()
@@ -26,7 +25,7 @@ private $db;
     public function getLastSubmittedConsumption($clientId){
         // here we will do a query 
         // then return the result and create an object 
-        return new ConsommationMensuelle(4500, '../assets/image/the_beast.jpg', 'test', false);
+        return new ConsommationMensuelle(4500, '../../uploads/meters/67ec8d3029355_the_beast.jpg', '2003-02-11', false);
     }
     // get all consumptions wil isAbnormal set to true 
     public function getAllAbnormalMonthlyConsumptions(){
