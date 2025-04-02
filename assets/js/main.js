@@ -40,7 +40,7 @@ function showAlert(message, type = 'info') {
 function formatPrice(price) {
     return new Intl.NumberFormat('fr-FR', { 
         style: 'currency', 
-        currency: 'XOF'
+        currency: 'MAD'
     }).format(price);
 }
 

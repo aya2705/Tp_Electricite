@@ -15,9 +15,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Constantes de tarification
     const TARIFS = {
-        tranche1: { max: 100, prix: 100 },   // 0-100 kWh à 100 XOF/kWh
-        tranche2: { max: 300, prix: 90 },    // 101-300 kWh à 90 XOF/kWh
-        tranche3: { prix: 80 }                // > 300 kWh à 80 XOF/kWh
+        tranche1: { max: 100, prix: 100 },   // 0-100 kWh à 100 Dh/kWh
+        tranche2: { max: 300, prix: 90 },    // 101-300 kWh à 90 Dh/kWh
+        tranche3: { prix: 80 }                // > 300 kWh à 80 Dh/kWh
     };
     const TVA_RATE = 0.18;
     
@@ -124,7 +124,7 @@ if (typeof formatPrice !== 'function') {
     function formatPrice(price) {
         return new Intl.NumberFormat('fr-FR', { 
             style: 'currency', 
-            currency: 'XOF',
+            currency: 'MAD',
             maximumFractionDigits: 0
         }).format(price);
     }

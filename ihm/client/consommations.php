@@ -163,10 +163,10 @@ $imagePath = $lastConsumption ? $lastConsumption->getImagePath() : '';
                 <h2>Espace Client</h2>
             </div>
             <div class="sidebar-menu">
-                <a href="dashboard.php" class="active">
+                <a href="dashboard.php">
                     <i class="fas fa-tachometer-alt"></i> Tableau de bord
                 </a>
-                <a href="consommations.php">
+                <a href="consommations.php" class="active">
                     <i class="fas fa-bolt"></i> Saisie Consommation
                 </a>
                 <a href="reclamations.php">
@@ -244,15 +244,15 @@ $imagePath = $lastConsumption ? $lastConsumption->getImagePath() : '';
                                 </div>
                                 <div class="summary-item">
                                     <span>Prix HT</span>
-                                    <span id="price-ht">0 XOF</span>
+                                    <span id="price-ht">0 Dh</span>
                                 </div>
                                 <div class="summary-item">
                                     <span>TVA (18%)</span>
-                                    <span id="price-tva">0 XOF</span>
+                                    <span id="price-tva">0 Dh</span>
                                 </div>
                                 <div class="summary-item summary-total">
                                     <span>Total TTC</span>
-                                    <span id="price-ttc">0 XOF</span>
+                                    <span id="price-ttc">0 Dh</span>
                                 </div>
                             </div>
                         </div>

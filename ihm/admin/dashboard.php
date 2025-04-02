@@ -230,7 +230,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'fournisseur') {
                         <i class="fas fa-file-invoice"></i>
                     </div>
                     <div class="value">42.5 M</div>
-                    <div class="label">XOF facturés (mois)</div>
+                    <div class="label">Dh facturés (mois)</div>
                 </div>
                 <div class="stat-card warning">
                     <div class="icon">
