@@ -110,7 +110,7 @@ $compteurs = $client ? $compteurDAO->getCompteursByClientId($client->getClientId
                 <a href="dashboard.php">
                     <i class="fas fa-tachometer-alt"></i> Tableau de bord
                 </a>
-                <a href="consumption.php">
+                <a href="consommations.php">
                     <i class="fas fa-bolt"></i> Saisie Consommation
                 </a>
                 <a href="claims.php">

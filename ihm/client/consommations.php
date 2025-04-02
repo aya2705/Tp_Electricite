@@ -6,14 +6,18 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'client') {
     header('Location: ../connexion.php');
     exit;
 }
-
 require_once '../../traitement/consommationService.php';
 require_once '../../models/consommationMensuelle.php';
+require_once '../../DB/ClientDAO.php';
+
+$clientDAO = new ClientDAO();
+$client = $clientDAO->getClientByUserId($_SESSION['user_id']);
 
 $consommationService = new ConsommationService();
-$lastConsumption = $consommationService->getLastMonthlyConsumption($_SESSION['user_id']);
+$lastConsumption = $consommationService->getLastMonthlyConsumption($client->getClientId());
 $consumptionDate = !empty($lastConsumption) ? date('F Y', strtotime($lastConsumption->getCreatedAt())) : 'N/A';
 $consumptionValue = !empty($lastConsumption) ? $lastConsumption->getKw() : 0;
+$imagePath = $lastConsumption ? $lastConsumption->getImagePath() : '';
 
 // Handle form submission
 $message = '';
@@ -55,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Format date for display
 $consumptionDate = !empty($lastConsumption) ? date('F Y', strtotime($lastConsumption->getCreatedAt())) : 'N/A';
 $consumptionValue = !empty($lastConsumption) ? $lastConsumption->getKw() : 0;
-$imagePath = $lastConsumption->getImagePath();
+$imagePath = $lastConsumption ? $lastConsumption->getImagePath() : '';
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -171,7 +175,7 @@ $imagePath = $lastConsumption->getImagePath();
                 <a href="profile.php">
                     <i class="fas fa-user"></i> Mon Profil
                 </a>
-                <a href="../index.html" class="logout">
+                <a href="../deconnexion.php" class="logout">
                     <i class="fas fa-sign-out-alt"></i> Déconnexion
                 </a>
             </div>
@@ -214,7 +218,7 @@ $imagePath = $lastConsumption->getImagePath();
                     <form id="consumption-form" method="POST" action="consommations.php" enctype="multipart/form-data">
                         <div class="form-group">
                             <label for="current-value">Valeur actuelle du compteur (kWh)</label>
-                            <input type="number" name="current-value" id="current-value" required>
+                            <input type="number" name="current-value" id="current-value" data-previous-value="<?php echo $consumptionValue; ?>" required>
                         </div>
                         <div class="form-group">
                             <label>Photo du compteur</label>
