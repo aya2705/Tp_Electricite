@@ -34,7 +34,7 @@
         ?>
         <div class="login-form">
             <h2>Connexion</h2>
-            <form id="login-form" method="POST" action="../traitement/authenticationService.php">
+            <form id="login-form" method="POST" action="traitement/authenticationService.php">
                 <div class="form-group">
                     <label for="email">Email</label>
                     <input type="email" id="email" name="email" required>

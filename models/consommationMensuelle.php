@@ -1,13 +1,12 @@
 <?php
 class ConsommationMensuelle {
-    public $id;
+    public $id; // !
     public $kw;
     private $imagePath; 
     private $createdAt; // important to check last submited consumtion
-    private $isAbnormal;
+    private $isAbnormal; // !
     
-    public function __construct($kw, $imagePath, $createdAt = null, $isAbnormal ) {
-        $this->isAbnormal = $isAbnormal;
+    public function __construct($kw, $imagePath, $createdAt = null) {
         $this->kw = $kw;
         $this->imagePath = $imagePath;
         $this->createdAt = $createdAt ?: new DateTime();

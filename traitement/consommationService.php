@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/../DB/consommationDAO.php';
+require_once __DIR__ . '/../models/consommationMensuelle.php';
 // as a client i need to submit a monthly submission (kw + image)
 // when i submit a new monthly consumption (it should be stored in the data base (monthly consumption)) 
 // i need a function that will take in the clientId and the consumption oject
@@ -10,11 +12,9 @@
 
 class consommationService {
     private $consommationRepository;
-    private $factureService;
     // here we will inject the data access object for consommationService
-    public function __construct($consommationRepository, $factureService) {
-        $this->factureService = $factureService;
-        $this->consommationRepository = $consommationRepository;
+    public function __construct() {
+        $this->consommationRepository = new ConsommationDAO();
     }
 
     // as a client i want to submit a cosommation mensuelle, if no anomalie is detected we create a facture and generate it, if an anomalie is detected the consumption is flagged and no facture is created
@@ -36,6 +36,8 @@ class consommationService {
               // factureService.createFactureMensuelle($clientId, consommationMensuelle) 
         }
         */
+        // For now, we'll assume no anomalies
+        return $this->consommationRepository->saveConsumption($clientId, $consommationMensuelle);
     
     }
 
@@ -63,6 +65,6 @@ class consommationService {
 
     // this function will return the lastly submitted consumption
     public function getLastMonthlyConsumption($clientId){
-      // consommationRepository.getLastSubmittedConsumption($clientId)
+      return $this->consommationRepository->getLastSubmittedConsumption($clientId);
     }
 }
