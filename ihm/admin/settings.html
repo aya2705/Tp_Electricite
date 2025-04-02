@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paramètres - Gestion des Factures</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .settings-section {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .settings-section h2 {
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+            color: var(--primary-color);
+        }
+        
+        .settings-group {
+            margin-bottom: 30px;
+        }
+        
+        .settings-group h3 {
+            margin-bottom: 15px;
+            color: var(--secondary-color);
+        }
+        
+        .settings-description {
+            margin-bottom: 15px;
+            color: #666;
+        }
+        
+        .settings-form {
+            max-width: 800px;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+            margin-right: 15px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .toggle-slider {
+            background-color: var(--success-color);
+        }
+        
+        input:focus + .toggle-slider {
+            box-shadow: 0 0 1px var(--success-color);
+        }
+        
+        input:checked + .toggle-slider:before {
+            transform: translateX(30px);
+        }
+        
+        .setting-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #f5f5f5;
+        }
+        
+        .setting-row:last-child {
+            border-bottom: none;
+        }
+        
+        .setting-label {
+            flex: 1;
+        }
+        
+        .setting-control {
+            flex: 2;
+        }
+        
+        .template-list {
+            margin-top: 20px;
+        }
+        
+        .template-item {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        
+        .template-item h4 {
+            margin: 0 0 10px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .template-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .template-actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .template-actions .edit-btn {
+            color: var(--secondary-color);
+        }
+        
+        .template-actions .delete-btn {
+            color: var(--danger-color);
+        }
+        
+        .status-active {
+            color: var(--success-color);
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>Espace Fournisseur</h2>
+            </div>
+            <div class="sidebar-menu">
+                <a href="dashboard.html">
+                    <i class="fas fa-tachometer-alt"></i> Tableau de bord
+                </a>
+                <a href="clients.html">
+                    <i class="fas fa-users"></i> Gestion des clients
+                </a>
+                <a href="claims.html">
+                    <i class="fas fa-exclamation-circle"></i> Réclamations
+                </a>
+                <a href="consumption.html">
+                    <i class="fas fa-bolt"></i> Gestion des saisies
+                </a>
+                <a href="settings.html" class="active">
+                    <i class="fas fa-cog"></i> Paramètres
+                </a>
+                <a href="../index.html" class="logout">
+                    <i class="fas fa-sign-out-alt"></i> Déconnexion
+                </a>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <h1>Paramètres</h1>
+            
+            <div class="settings-section">
+                <h2>Paramètres généraux</h2>
+                
+                <div class="settings-group">
+                    <h3>Tarification</h3>
+                    <p class="settings-description">Configurez les tranches de tarification</p>
+                    
+                    <form class="settings-form">
+                        <div class="setting-row">
+                            <div class="setting-label">
+                                <label for="tranche1">Tranche 1 (0-100 kWh)</label>
+                            </div>
+                            <div class="setting-control">
+                                <div style="display: flex; align-items: center;">
+                                    <input type="number" id="tranche1" value="100" class="form-control" style="width: 100px;">
+                                    <span style="margin: 0 10px;">XOF par kWh</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="setting-row">
+                            <div class="setting-label">
+                                <label for="tranche2">Tranche 2 (101-300 kWh)</label>
+                            </div>
+                            <div class="setting-control">
+                                <div style="display: flex; align-items: center;">
+                                    <input type="number" id="tranche2" value="90" class="form-control" style="width: 100px;">
+                                    <span style="margin: 0 10px;">XOF par kWh</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="setting-row">
+                            <div class="setting-label">
+                                <label for="tranche3">Tranche 3 (> 300 kWh)</label>
+                            </div>
+                            <div class="setting-control">
+                                <div style="display: flex; align-items: center;">
+                                    <input type="number" id="tranche3" value="80" class="form-control" style="width: 100px;">
+                                    <span style="margin: 0 10px;">XOF par kWh</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="setting-row">
+                            <div class="setting-label">
+                                <label for="tva">TVA</label>
+                            </div>
+                            <div class="setting-control">
+                                <div style="display: flex; align-items: center;">
+                                    <input type="number" id="tva" value="18" class="form-control" style="width: 100px;">
+                                    <span style="margin: 0 10px;">%</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-actions mt-3">
+                            <button type="submit" class="btn btn-primary">Enregistrer les paramètres</button>
+                            <button type="button" class="btn btn-secondary">Réinitialiser</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="settings-section">
+                <h2>Modèles de réponse</h2>
+                
+                <div class="settings-group">
+                    <h3>Modèles pour les réclamations</h3>
+                    <p class="settings-description">Gérez les modèles de réponse pour différents types de réclamations</p>
+                    
+                    <button class="btn btn-primary" id="add-template-btn">
+                        <i class="fas fa-plus"></i> Ajouter un modèle
+                    </button>
+                    
+                    <div class="template-list">
+                        <div class="template-item">
+                            <h4>
+                                <span>Fuite externe - Intervention requise</span>
+                                <div class="template-actions">
+                                    <button class="edit-btn" data-id="1"><i class="fas fa-edit"></i></button>
+                                    <button class="delete-btn" data-id="1"><i class="fas fa-trash-alt"></i></button>
+                                </div>
+                            </h4>
+                            <p>Modèle utilisé pour confirmer l'intervention d'un technicien suite à une fuite externe.</p>
+                            <div><small><strong>Catégorie:</strong> Fuite externe</small></div>
+                        </div>
+                        
+                        <div class="template-item">
+                            <h4>
+                                <span>Facture - Erreur confirmée</span>
+                                <div class="template-actions">
+                                    <button class="edit-btn" data-id="2"><i class="fas fa-edit"></i></button>
+                                    <button class="delete-btn" data-id="2"><i class="fas fa-trash-alt"></i></button>
+                                </div>
+                            </h4>
+                            <p>Modèle utilisé pour confirmer une erreur sur la facture et annoncer une correction.</p>
+                            <div><small><strong>Catégorie:</strong> Facture</small></div>
+                        </div>
+                        
+                        <div class="template-item">
+                            <h4>
+                                <span>Facture - Montant correct</span>
+                                <div class="template-actions">
+                                    <button class="edit-btn" data-id="3"><i class="fas fa-edit"></i></button>
+                                    <button class="delete-btn" data-id="3"><i class="fas fa-trash-alt"></i></button>
+                                </div>
+                            </h4>
+                            <p>Modèle utilisé pour confirmer qu'une facture contestée est correcte.</p>
+                            <div><small><strong>Catégorie:</strong> Facture</small></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            
+        </div>
+    </div>
+    
+    <!-- Modal pour ajouter/modifier un modèle -->
+    <div id="template-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="template-modal-title">Ajouter un modèle</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="template-form">
+                    <div class="form-group">
+                        <label for="template-name">Nom du modèle</label>
+                        <input type="text" id="template-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="template-category">Catégorie</label>
+                        <select id="template-category" required>
+                            <option value="">-- Sélectionner une catégorie --</option>
+                            <option value="fuite_externe">Fuite externe</option>
+                            <option value="fuite_interne">Fuite interne</option>
+                            <option value="facture">Facture</option>
+                            <option value="autre">Autre</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="template-content">Contenu du modèle</label>
+                        <textarea id="template-content" rows="10" required></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Enregistrer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script src="../assets/js/main.js"></script>
+    <script src="js/settings.js"></script>
+</body>
+</html>
