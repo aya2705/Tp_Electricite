@@ -10,7 +10,7 @@ class Database {
         $host = '127.0.0.1';
         $dbName = 'electricite_db';
         $user = 'root';
-        $password = '';
+        $password = 'password';
         $dsn = "mysql:host={$host};dbname={$dbName};charset=utf8mb4";
         
         try {

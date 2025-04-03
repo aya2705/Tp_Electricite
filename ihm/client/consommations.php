@@ -38,12 +38,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             if (move_uploaded_file($_FILES['meter-photo']['tmp_name'], $imagePath)) {
                 $consumption = new ConsommationMensuelle($kw, $imagePath);
-                echo $consumption->getKw();
-                echo "<p>photo saved to directory and object created now calling the service to persist the consumption</p>";
+                // echo $consumption->getKw();
+                // echo "<p>photo saved to directory and object created now calling the service to persist the consumption</p>";
                 $result = $consommationService->submitConsommationMensuelle($clientId, $consumption);
                  
                 if ($result) {
-                    echo "Good";
+                    // echo "Good";
                     header('Location: consommations.php');
                     exit;
                 }

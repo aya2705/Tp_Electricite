@@ -208,7 +208,7 @@ $anomalies = $consommationService->getAllMonthlyConsumptionsWithAnomaly();
                 <h2>Espace Fournisseur</h2>
             </div>
             <div class="sidebar-menu">
-                <a href="dashboard.html">
+                <a href="dashboard.php">
                     <i class="fas fa-tachometer-alt"></i> Tableau de bord
                 </a>
                 <a href="clients.php">
@@ -217,10 +217,10 @@ $anomalies = $consommationService->getAllMonthlyConsumptionsWithAnomaly();
                 <a href="claims.php">
                     <i class="fas fa-exclamation-circle"></i> Réclamations
                 </a>
-                <a href="consumption.html" class="active">
+                <a href="consumption.php" class="active">
                     <i class="fas fa-bolt"></i> Gestion des saisies
                 </a>
-                <a href="settings.html">
+                <a href="settings.php">
                     <i class="fas fa-cog"></i> Paramètres
                 </a>
                 <a href="../deconnexion.php" class="logout">

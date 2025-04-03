@@ -36,7 +36,7 @@
         ?>
         <div class="login-form">
             <h2>Connexion</h2>
-            <form method="POST" action="/electrecité/traitement/userService.php?action=authenticate">
+            <form method="POST" action="/traitement/userService.php?action=authenticate">
                 <div class="form-group">
                     <label for="email">Email</label>
                     <input type="email" id="email" name="email" required>

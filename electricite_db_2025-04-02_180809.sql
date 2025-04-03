@@ -82,6 +82,47 @@ CREATE TABLE `anomalies_consommation` (
   CONSTRAINT `anomalies_consommation_ibfk_1` FOREIGN KEY (`consommation_id`) REFERENCES `consommations_mensuelles` (`consommation_id`),
   CONSTRAINT `anomalies_consommation_ibfk_2` FOREIGN KEY (`previous_consommation_id`) REFERENCES `consommations_mensuelles` (`consommation_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Table reclamations
+DROP TABLE IF EXISTS `reclamations`;
+CREATE TABLE `reclamations` (
+  `reclamation_id` int(11) NOT NULL AUTO_INCREMENT,
+  `client_id` int(11) NOT NULL,
+  `type` enum('fuite_externe','fuite_interne','facture','autre') NOT NULL,
+  `description` text NOT NULL,
+  `statut` enum('en_attente','en_traitement','résolue','refusée') DEFAULT 'en_attente',
+  `date_creation` datetime DEFAULT CURRENT_TIMESTAMP,
+  `date_resolution` datetime DEFAULT NULL,
+  PRIMARY KEY (`reclamation_id`),
+  KEY `client_id` (`client_id`),
+  CONSTRAINT `reclamations_fk_client` FOREIGN KEY (`client_id`) REFERENCES `clients` (`client_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Table pieces_jointes
+DROP TABLE IF EXISTS `pieces_jointes`;
+CREATE TABLE `pieces_jointes` (
+  `piece_id` int NOT NULL AUTO_INCREMENT,
+  `reclamation_id` int NOT NULL,
+  `file_path` varchar(255) NOT NULL,
+  `type` varchar(50) DEFAULT NULL,
+  PRIMARY KEY (`piece_id`),
+  KEY `reclamation_id` (`reclamation_id`),
+  CONSTRAINT `pieces_jointes_fk_reclamation` FOREIGN KEY (`reclamation_id`) REFERENCES `reclamations` (`reclamation_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Table reponses
+DROP TABLE IF EXISTS `reponses`;
+CREATE TABLE `reponses` (
+  `reponse_id` int NOT NULL AUTO_INCREMENT,
+  `reclamation_id` int NOT NULL,
+  `contenu` text NOT NULL,
+  `status` varchar(255) DEFAULT NULL,
+  `date_reponse` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`reponse_id`),
+  KEY `reclamation_id` (`reclamation_id`),
+  CONSTRAINT `reponses_fk_reclamation` FOREIGN KEY (`reclamation_id`) REFERENCES `reclamations` (`reclamation_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 -- Insert data into tables
 
 -- Users data
