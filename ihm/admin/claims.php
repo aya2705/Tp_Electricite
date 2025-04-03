@@ -1,13 +1,12 @@
 <?php
-  require_once "../../../DB/models/ReclamationDAO.php";
+  require_once "../../DB/ReclamationDAO.php";
  session_start();
-
  // Vérifier si les réclamations sont stockées dans la session
 if (isset($_SESSION['reclamations']) && is_array($_SESSION['reclamations'])) {
     $reclamations = $_SESSION['reclamations'];
 } else {
     // Si aucune réclamation n'est trouvée, récupérer les réclamations à partir de la base de données
-    $client_id = $_SESSION['client_id'] ?? 1;
+    $client_id = $_SESSION['client_id'];
     $reclamations = ReclamationDAO::getReclamationsByClientId($client_id);
 }
  ?>
@@ -17,7 +16,7 @@ if (isset($_SESSION['reclamations']) && is_array($_SESSION['reclamations'])) {
      <meta charset="UTF-8">
      <meta name="viewport" content="width=device-width, initial-scale=1.0">
      <title>Réclamations - Gestion des Factures</title>
-     <link rel="stylesheet" href="css/main.css">
+     <link rel="stylesheet" href="../../assets/css/main.css">
      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
  </head>
  <body>
@@ -28,11 +27,11 @@ if (isset($_SESSION['reclamations']) && is_array($_SESSION['reclamations'])) {
                  <h2>Espace Client</h2>
              </div>
              <div class="sidebar-menu">
-                 <a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Tableau de bord</a>
-                 <a href="consumption.html"><i class="fas fa-bolt"></i> Saisie Consommation</a>
-                 <a href="claims.php" class="active"><i class="fas fa-exclamation-circle"></i> Réclamations</a>
-                 <a href="profile.html"><i class="fas fa-user"></i> Mon Profil</a>
-                 <a href="../index.html" class="logout"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
+                 <a href="dashboard.php"><i class="fas fa-tachometer-alt"></i> Tableau de bord</a>
+                 <a href="consumption.php"><i class="fas fa-bolt"></i> Saisie Consommation</a>
+                 <a href="claims-frs.php" class="active"><i class="fas fa-exclamation-circle"></i> Réclamations</a>
+                 <a href="profile.php"><i class="fas fa-user"></i> Mon Profil</a>
+                 <a href="../deconnexion.php" class="logout"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
              </div>
          </div>
  
@@ -47,7 +46,7 @@ if (isset($_SESSION['reclamations']) && is_array($_SESSION['reclamations'])) {
             <h2>Nouvelle Réclamation</h2>
         </div>
 
-        <form id="new-claim-form" action="../../../traitement/ReclamationService.php" method="POST" enctype="multipart/form-data">
+        <form id="new-claim-form" action="../../traitement/ReclamationService.php" method="POST" enctype="multipart/form-data">
             <div class="form-group">
                 <input type="hidden" name="action" value="add">
                 <label for="claim-type">Type de réclamation</label>

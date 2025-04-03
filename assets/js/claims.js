@@ -94,7 +94,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Redirection différée
             setTimeout(() => {
-                window.location.href = 'dashboard.html';
+                window.location.href = 'dashboard.php';
             }, 2000);
         });
     }

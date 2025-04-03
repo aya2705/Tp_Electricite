@@ -111,7 +111,7 @@ $consumptionValue = !empty($lastConsumption) ? $lastConsumption->getKw() : 0;
                 <a href="consommations.php">
                     <i class="fas fa-bolt"></i> Saisie Consommation
                 </a>
-                <a href="reclamations.php">
+                <a href="claims.php">
                     <i class="fas fa-exclamation-circle"></i> Réclamations
                 </a>
                 <a href="profile.php">

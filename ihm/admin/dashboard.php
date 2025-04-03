@@ -198,7 +198,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'fournisseur') {
                 <a href="clients.php">
                     <i class="fas fa-users"></i> Gestion des clients
                 </a>
-                <a href="claims.php">
+                <a href="claims-frs.php">
                     <i class="fas fa-exclamation-circle"></i> Réclamations
                 </a>
                 <a href="consumption.php">

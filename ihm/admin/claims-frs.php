@@ -1,6 +1,6 @@
 <?php
 // Traitement de la récupération des réclamations
-require_once '../../../DB/models/ReclamationDAO.php';
+require_once '../../DB/ReclamationDAO.php';
 
 // Récupérer toutes les réclamations
 $reclamations = ReclamationDAO::getAllReclamations();
@@ -13,7 +13,7 @@ $reclamationId = $_SESSION['reclamation_id'] ?? null;
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestion des Réclamations - Gestion des Factures</title>
-    <link rel="stylesheet" href="css/main-frs.css">
+    <link rel="stylesheet" href="../../assets/css/main-frs.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
@@ -24,22 +24,22 @@ $reclamationId = $_SESSION['reclamation_id'] ?? null;
                 <h2>Espace Fournisseur</h2>
             </div>
             <div class="sidebar-menu">
-                <a href="dashboard.html">
+                <a href="dashboard.php">
                     <i class="fas fa-tachometer-alt"></i> Tableau de bord
                 </a>
-                <a href="clients.html">
+                <a href="clients.php">
                     <i class="fas fa-users"></i> Gestion des clients
                 </a>
-                <a href="claims.html" class="active">
+                <a href="claims-frs.php" class="active">
                     <i class="fas fa-exclamation-circle"></i> Réclamations
                 </a>
-                <a href="consumption.html">
+                <a href="consumption.php">
                     <i class="fas fa-bolt"></i> Gestion des saisies
                 </a>
-                <a href="settings.html">
+                <a href="settings.php">
                     <i class="fas fa-cog"></i> Paramètres
                 </a>
-                <a href="../index.html" class="logout">
+                <a href="../deconnexion.php" class="logout">
                     <i class="fas fa-sign-out-alt"></i> Déconnexion
                 </a>
             </div>
@@ -159,7 +159,7 @@ $reclamationId = $_SESSION['reclamation_id'] ?? null;
                                 {{#each piecesJointes}}
                                 <div class="attachment flex items-center space-x-2 bg-white p-2 rounded border border-gray-300">
                                     <i class="fas fa-paperclip text-gray-500"></i>
-                                    <a href="/client/uploads/{{ this }}" target="_blank" class="text-blue-500 hover:underline">{{ this }}</a>
+                                    <a href="../../uploads/claims/{{ this }}" target="_blank" class="text-blue-500 hover:underline">{{ this }}</a>
                                 </div>
                                 {{/each}}
                             </div>
@@ -270,6 +270,6 @@ $reclamationId = $_SESSION['reclamation_id'] ?? null;
 
     </script>
 
-    <script src="js/claims-frs.js"></script>
+    <script src="../../assets/js/claims-frs.js"></script>
 </body>
 </html>

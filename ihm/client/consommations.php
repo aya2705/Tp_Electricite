@@ -170,7 +170,7 @@ $imagePath = $lastConsumption ? $lastConsumption->getImagePath() : '';
                 <a href="consommations.php" class="active">
                     <i class="fas fa-bolt"></i> Saisie Consommation
                 </a>
-                <a href="reclamations.php">
+                <a href="claims.php">
                     <i class="fas fa-exclamation-circle"></i> Réclamations
                 </a>
                 <a href="profile.php">
