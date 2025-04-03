@@ -61,6 +61,7 @@ $reclamationId = $_SESSION['reclamation_id'] ?? null;
                         <option value="pending">En attente</option>
                         <option value="processing">En traitement</option>
                         <option value="resolved">Résolue</option>
+                        <option value="refused"></option>
                     </select>
                 </div>
                 <div class="filter-group">

@@ -1,16 +1,16 @@
 <?php
-require_once "../../DB/ReclamationDAO.php";
-session_start();
+  require_once "../../DB/ReclamationDAO.php";
+ session_start();
 
-// Vérifier si les réclamations sont stockées dans la session
+ // Vérifier si les réclamations sont stockées dans la session
 if (isset($_SESSION['reclamations']) && is_array($_SESSION['reclamations'])) {
     $reclamations = $_SESSION['reclamations'];
 } else {
     // Si aucune réclamation n'est trouvée, récupérer les réclamations à partir de la base de données
-    $client_id = $_SESSION['client_id'];
+    $client_id = $_SESSION['client_id'] ?? 1;
     $reclamations = ReclamationDAO::getReclamationsByClientId($client_id);
 }
-?>
+ ?>
 <!DOCTYPE html>
 <html lang="fr">
 
@@ -49,7 +49,7 @@ if (isset($_SESSION['reclamations']) && is_array($_SESSION['reclamations'])) {
                     <h2>Nouvelle Réclamation</h2>
                 </div>
 
-                <form id="new-claim-form" action="../../../traitement/ReclamationService.php" method="POST"
+                <form id="new-claim-form" action="../../traitement/ReclamationService.php" method="POST"
                     enctype="multipart/form-data">
                     <div class="form-group">
                         <input type="hidden" name="action" value="add">
@@ -81,16 +81,16 @@ if (isset($_SESSION['reclamations']) && is_array($_SESSION['reclamations'])) {
 
             <!-- Liste des réclamations -->
             <div class="card">
-                <div class="card-header">
-                    <h2>Réclamations en cours</h2>
-                </div>
+        <div class="card-header">
+            <h2>Réclamations en cours</h2>
+        </div>
 
-                <div class="claims-list">
-                    <!-- Affichage dynamique des réclamations -->
-                    <?php
+        <div class="claims-list">
+            <!-- Affichage dynamique des réclamations -->
+            <?php
 
-                    foreach ($reclamations as $claim) {
-                        echo '<div class="claim-item">
+            foreach ($reclamations as $claim) {
+                echo '<div class="claim-item">
                         <div class="claim-icon"><i class="fas fa-file-alt"></i></div>
                         <div class="claim-content">
                             <h3>' . htmlspecialchars($claim['type']) . '</h3>
@@ -103,11 +103,11 @@ if (isset($_SESSION['reclamations']) && is_array($_SESSION['reclamations'])) {
                         </div>
                         <span class="claim-status status-' . ($claim['statut'] == "résolue" ? "resolved" : "pending") . '">' . htmlspecialchars($claim['statut']) . '</span>
                     </div>';
-                    }
-                    ?>
-                </div>
-            </div>
+            }
+            ?>
         </div>
+    </div>
+</div>
 
 </body>
 

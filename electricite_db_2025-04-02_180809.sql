@@ -57,7 +57,9 @@ CREATE TABLE `consommations_mensuelles` (
   KEY `compteur_id` (`compteur_id`),
   CONSTRAINT `consommations_mensuelles_ibfk_1` FOREIGN KEY (`client_id`) REFERENCES `clients` (`client_id`),
   CONSTRAINT `consommations_mensuelles_ibfk_2` FOREIGN KEY (`compteur_id`) REFERENCES `compteurs` (`compteur_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 CCOLLATE=utf8mb4_unicode_ci;
+
+
 
 -- Drop the existing anomalies_consommation table if it exists
 DROP TABLE IF EXISTS `anomalies_consommation`;

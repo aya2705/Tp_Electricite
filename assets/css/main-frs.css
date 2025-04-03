@@ -113,6 +113,7 @@
     color: #27ae60;
 }
 
+
 .claim-status {
     padding: 3px 10px;
     border-radius: 12px;
@@ -133,6 +134,11 @@
 .status-resolved {
     background-color: #d4edda;
     color: #155724;
+}
+
+.status-refused{
+    background-color: #d1ecf1;
+    color: #f42338;
 }
 
 .claim-type {
