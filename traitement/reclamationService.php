@@ -81,24 +81,30 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['action']) && $_POST['
 }
 
 
-// Si la méthode est POST et l'action est "respond"
-if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["action"]) && $_POST["action"] === "respond") {
-    $reclamation_id = isset($_POST["reclamation_id"]) ? intval($_POST["reclamation_id"]) : 0;
-    $response_text = isset($_POST["response_text"]) ? trim($_POST["response_text"]) : '';
-    $claim_status = isset($_POST["claim_status"]) ? $_POST["claim_status"] : 'en_traitement';
+    if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["action"]) && $_POST["action"] === "respond") {
+        // Récupérer et valider les paramètres
+        $reclamation_id = isset($_POST["reclamation_id"]) ? intval($_POST["reclamation_id"]) : 0;
+        $response_text = isset($_POST["response_text"]) ? trim($_POST["response_text"]) : '';
+        $claim_status = isset($_POST["claim_status"]) ? $_POST["claim_status"] : 'en_traitement';
 
-    if ($reclamation_id <= 0 || empty($response_text)) {
-        die("Erreur: ID de réclamation ou texte de réponse invalide.");
-    }
+        // Validation des données
+        if ($reclamation_id <= 0 || empty($response_text)) {
+            return "Erreur: ID de réclamation ou texte de réponse invalide.";
+        }
 
-    if (!ReclamationDAO::traiterReponse($reclamation_id, $response_text, $claim_status)) {
-        error_log("Échec du traitement de la réclamation ID: $reclamation_id, Statut: $claim_status, Réponse: $response_text");
-        die("Erreur lors du traitement de la réclamation.");
-    } else {
+        // Appeler la méthode traiterReponse dans ReclamationDAO
+        if (!ReclamationDAO::traiterReponse($reclamation_id, $response_text, $claim_status)) {
+            error_log("Échec du traitement de la réclamation ID: $reclamation_id, Statut: $claim_status, Réponse: $response_text");
+            return "Erreur lors du traitement de la réclamation.";
+        }
+
+        // Rediriger en cas de succès
         header("Location: ../ihm/admin/claims-frs.php");
         exit;
     }
-}
+
+    return null; // Si la condition POST n'est pas remplie
+
 
 // Traitement uniquement pour les requêtes GET
 if ($_SERVER["REQUEST_METHOD"] === "GET") {
