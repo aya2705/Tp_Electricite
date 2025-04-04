@@ -160,8 +160,8 @@ $reclamationId = $_SESSION['reclamation_id'] ?? null;
                                 {{#each piecesJointes}}
                                 <div class="attachment flex items-center space-x-2 bg-white p-2 rounded border border-gray-300">
                                     <i class="fas fa-paperclip text-gray-500"></i>
-                                    <a href="../../uploads/claims/{{ this }}" target="_blank" class="text-blue-500 hover:underline">{{ this }}</a>
-                                </div>
+                                    <a href="/uploads/claims/{{this}}" target="_blank" class="text-blue-500 hover:underline">{{this}}</a>
+                                    </div>
                                 {{/each}}
                             </div>
                         </div>
@@ -215,7 +215,7 @@ $reclamationId = $_SESSION['reclamation_id'] ?? null;
                         return;
                     }
 
-                    fetch("../../../traitement/reclamationService.php?reclamationId=" + reclamationId)
+                    fetch("../../traitement/reclamationService.php?reclamationId=" + reclamationId)
                         .then(response => {
                             if (!response.ok) {
                                 throw new Error("Erreur réseau");
@@ -248,7 +248,7 @@ $reclamationId = $_SESSION['reclamation_id'] ?? null;
             }
 
             // Charger les détails de la réclamation
-            fetch("../../../traitement/reclamationService.php?reclamationId=" + reclamationId)
+            fetch("../../traitement/reclamationService.php?reclamationId=" + reclamationId)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error("Erreur réseau");
@@ -274,3 +274,4 @@ $reclamationId = $_SESSION['reclamation_id'] ?? null;
     <script src="../../assets/js/claims-frs.js"></script>
 </body>
 </html>
+

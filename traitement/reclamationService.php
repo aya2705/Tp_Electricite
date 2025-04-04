@@ -3,43 +3,83 @@ require_once '../DB/ReclamationDAO.php';
 session_start();
 
 // Si l'action est l'ajout de réclamation
-if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['action']) && $_POST['action'] === 'add') {
-    try {
-        $client_id = $_SESSION['client_id'] ?? 1;
-        $type = htmlspecialchars($_POST['claim_type']);
-        $description = htmlspecialchars($_POST['description']);
-        $statut = 'en_attente';
 
-        // Ajouter la réclamation et récupérer son ID
-        $reclamation_id = ReclamationDAO::addReclamation($client_id, $type, $description, $statut);
+class ReclamationService {
 
-        if ($reclamation_id) {
-            $_SESSION['reclamation_id'] = $reclamation_id; // Stocker en session
+    public function ajouterReclamation($client_id, $type, $description, $fichiers) {
+        try {
+            $statut = 'en_attente';
 
-            // Gérer les pièces jointes
-            if (!empty($_FILES['attachments']['name'][0])) {
-                $uploadDir = '../uploads/claims/';
+            // Ajouter la réclamation et récupérer son ID
+            $reclamationDAO = new ReclamationDAO();
+            $reclamation_id = $reclamationDAO->addReclamation($client_id, $type, $description, $statut);
 
-                foreach ($_FILES['attachments']['tmp_name'] as $key => $tmpName) {
-                    $fileName = time() . "_" . basename($_FILES['attachments']['name'][$key]);
-                    $targetFilePath = $uploadDir . $fileName;
-
-                    if (move_uploaded_file($tmpName, $targetFilePath)) {
-                        // Ajouter chaque fichier à la base de données
-                        ReclamationDAO::addPieceJointe($reclamation_id, $fileName, $_FILES['attachments']['type'][$key]);
-                    }
-                }
+            if (!$reclamation_id) {
+                throw new Exception("Erreur lors de l'ajout de la réclamation.");
             }
 
+            $_SESSION['reclamation_id'] = $reclamation_id; // Stocker en session
+
+            // Gérer les pièces jointes si présentes
+            if (!empty($fichiers['name'][0])) {
+                $this->ajouterPiecesJointes($reclamation_id, $fichiers);
+            }
+
+            // Rediriger après l'ajout
             header("Location: /ihm/client/claims.php?success=claimAdded");
             exit;
-        } else {
-            throw new Exception("Erreur lors de l'ajout de la réclamation.");
+        } catch (Exception $e) {
+            echo "Erreur : " . $e->getMessage();
         }
-    } catch (Exception $e) {
-        echo "Erreur : " . $e->getMessage();
+    }
+
+    private function ajouterPiecesJointes($reclamation_id, $fichiers) {
+        $uploadDir = __DIR__ . '../../uploads/claims/';
+
+        // Vérifier si le dossier existe, sinon le créer
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0777, true); // Crée le dossier si nécessaire
+        }
+
+        foreach ($fichiers['tmp_name'] as $key => $tmpName) {
+            $fileName = time() . "_" . basename($fichiers['name'][$key]);
+            $targetFilePath = $uploadDir . $fileName;
+
+            // Vérifier la taille du fichier (par exemple, maximum 2 Mo)
+            if ($fichiers['size'][$key] > 2 * 1024 * 1024) {
+                throw new Exception("Le fichier " . $fichiers['name'][$key] . " est trop volumineux.");
+            }
+
+            // Vérifier le type MIME du fichier
+            $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'];
+            $fileType = $fichiers['type'][$key];
+            if (!in_array($fileType, $allowedTypes)) {
+                throw new Exception("Type de fichier non autorisé pour " . $fichiers['name'][$key]);
+            }
+
+            // Déplacer le fichier vers le répertoire d'upload
+            if (move_uploaded_file($tmpName, $targetFilePath)) {
+                // Ajouter chaque fichier à la base de données
+                $dao = new ReclamationDAO();
+                $dao->addPieceJointe($reclamation_id, $fileName, $fichiers['type'][$key]);
+            } else {
+                throw new Exception("Erreur lors du téléchargement du fichier: " . $fichiers['name'][$key]);
+            }
+        }
     }
 }
+
+// Vérifier la requête
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['action']) && $_POST['action'] === 'add') {
+    $client_id = $_SESSION['client_id'] ?? 1;
+    $type = htmlspecialchars($_POST['claim_type']);
+    $description = htmlspecialchars($_POST['description']);
+    $fichiers = $_FILES['attachments'] ?? [];
+
+    $service = new ReclamationService();
+    $service->ajouterReclamation($client_id, $type, $description, $fichiers);
+}
+
 
 // Si la méthode est POST et l'action est "respond"
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["action"]) && $_POST["action"] === "respond") {
@@ -66,21 +106,21 @@ if ($_SERVER["REQUEST_METHOD"] === "GET") {
 
     if ($reclamationId && filter_var($reclamationId, FILTER_VALIDATE_INT)) {
         try {
-            $reclamation = ReclamationDAO::getReclamationById($reclamationId);
+            $reclamationDAO = new ReclamationDAO();
+            $reclamation = $reclamationDAO->getReclamationById($reclamationId); // Appel à la nouvelle méthode
+    
             if ($reclamation) {
                 // Traitement de la réclamation récupérée
-                $clientId = $reclamation['client_id'];
-                $claimDescription = $reclamation['description'];
-                $claimDate = $reclamation['date_creation'];
-                $claimType = ucfirst($reclamation['type']);
-                $piecesJointes = isset($reclamation['pieces_jointes']) && is_array($reclamation['pieces_jointes'])
-                    ? array_map(function ($piece) {
-                        return $piece['file_path'];
-                    }, $reclamation['pieces_jointes'])
-                    : [];
-
-                $client = ReclamationDAO::getClientById($clientId);
-
+                $clientId = $reclamation->getClientId();  // Utilisation de la méthode de l'objet Reclamation pour récupérer le client_id
+                $claimDescription = $reclamation->getDescription();
+                $claimDate = $reclamation->getDateCreation();
+                $claimType = ucfirst($reclamation->getType());
+                
+                // Récupérer les pièces jointes via la méthode `getPiecesJointes()` si disponible dans la classe `Reclamation`
+                $piecesJointes = $reclamation->getPiecesJointes() ?: []; // On suppose qu'il y a une méthode getPiecesJointes
+    
+                $client = $reclamationDAO->getClientById($clientId);
+    
                 // Vérification simplifiée
                 if ($client) {
                     $clientName = htmlspecialchars($client['full_name'] ?? 'Non renseigné');
@@ -88,7 +128,7 @@ if ($_SERVER["REQUEST_METHOD"] === "GET") {
                     $clientPhone = htmlspecialchars($client['phone'] ?? 'Non renseigné');
                     $clientAddress = htmlspecialchars($client['address'] ?? 'Non renseigné');
                     $claimRef = "#REF-" . $reclamationId;
-
+    
                     // Construire la réponse HTML
                     echo "
                         <div class='client-info'>
@@ -108,8 +148,8 @@ if ($_SERVER["REQUEST_METHOD"] === "GET") {
                             <div class='claim-description'>$claimDescription</div>
                             <p><strong>Pièces jointes:</strong></p>
                             <div class='attachments'>";
-
-                    if (!empty($piecesJointes[0])) {
+    
+                    if (!empty($piecesJointes)) {
                         foreach ($piecesJointes as $attachment) {
                             echo "<div class='attachment'>
                                     <i class='fas fa-paperclip'></i> <a href='/uploads/claims/$attachment' target='_blank'>$attachment</a>
@@ -131,7 +171,7 @@ if ($_SERVER["REQUEST_METHOD"] === "GET") {
     } else {
         echo "L'ID de réclamation est invalide ou manquant.";
     }
-
+    
     // Récupérer les réclamations lorsque la page est visitée sans POST
     $client_id = $_SESSION['client_id'];
     $reclamations = ReclamationDAO::getReclamationsByClientId($client_id);

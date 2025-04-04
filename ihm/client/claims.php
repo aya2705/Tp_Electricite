@@ -8,7 +8,8 @@ if (isset($_SESSION['reclamations']) && is_array($_SESSION['reclamations'])) {
 } else {
     // Si aucune réclamation n'est trouvée, récupérer les réclamations à partir de la base de données
     $client_id = $_SESSION['client_id'] ?? 1;
-    $reclamations = ReclamationDAO::getReclamationsByClientId($client_id);
+    $reclamationDAO = new ReclamationDAO();
+    $reclamations = $reclamationDAO->getReclamationsByClientId($client_id);
 }
  ?>
 <!DOCTYPE html>
@@ -49,8 +50,7 @@ if (isset($_SESSION['reclamations']) && is_array($_SESSION['reclamations'])) {
                     <h2>Nouvelle Réclamation</h2>
                 </div>
 
-                <form id="new-claim-form" action="../../traitement/ReclamationService.php" method="POST"
-                    enctype="multipart/form-data">
+                <form id="new-claim-form" action="../../traitement/ReclamationService.php" method="POST" enctype="multipart/form-data">
                     <div class="form-group">
                         <input type="hidden" name="action" value="add">
                         <label for="claim-type">Type de réclamation</label>
@@ -77,6 +77,7 @@ if (isset($_SESSION['reclamations']) && is_array($_SESSION['reclamations'])) {
                         <button type="submit" class="btn btn-primary">Soumettre la réclamation</button>
                     </div>
                 </form>
+
             </div>
 
             <!-- Liste des réclamations -->
