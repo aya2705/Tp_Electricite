@@ -1,13 +1,11 @@
--- Drop tables if they exist (in reverse dependency order to avoid foreign key issues)
 DROP TABLE IF EXISTS `anomalies_consommation`;
 DROP TABLE IF EXISTS `consommations_mensuelles`;
 DROP TABLE IF EXISTS `compteurs`;
 DROP TABLE IF EXISTS `clients`;
 DROP TABLE IF EXISTS `users`;
+DROP TABLE IF EXISTS `factures_mensuelle`;
 
--- Create tables in dependency order
 
--- 1. Users table (no dependencies)
 CREATE TABLE `users` (
   `user_id` int NOT NULL AUTO_INCREMENT,
   `email` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
@@ -18,7 +16,6 @@ CREATE TABLE `users` (
   UNIQUE KEY `email` (`email`)
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- 2. Clients table (depends on users)
 CREATE TABLE `clients` (
   `client_id` int NOT NULL AUTO_INCREMENT,
   `user_id` int DEFAULT NULL,
@@ -30,9 +27,7 @@ CREATE TABLE `clients` (
   UNIQUE KEY `user_id` (`user_id`),
   CONSTRAINT `clients_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-DROP TABLE IF EXISTS `compteurs`;
 
--- 3. Compteurs table (depends on clients)
 CREATE TABLE `compteurs` (
   `compteur_id` int NOT NULL AUTO_INCREMENT,
   `client_id` int NOT NULL,
@@ -43,8 +38,6 @@ CREATE TABLE `compteurs` (
   CONSTRAINT `compteurs_ibfk_1` FOREIGN KEY (`client_id`) REFERENCES `clients` (`client_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-DROP TABLE IF EXISTS `consommations_mensuelles`;
--- 4. Consommations_mensuelles table (depends on clients and compteurs)
 CREATE TABLE `consommations_mensuelles` (
   `consommation_id` int NOT NULL AUTO_INCREMENT,
   `client_id` int NOT NULL,
@@ -57,14 +50,8 @@ CREATE TABLE `consommations_mensuelles` (
   KEY `compteur_id` (`compteur_id`),
   CONSTRAINT `consommations_mensuelles_ibfk_1` FOREIGN KEY (`client_id`) REFERENCES `clients` (`client_id`),
   CONSTRAINT `consommations_mensuelles_ibfk_2` FOREIGN KEY (`compteur_id`) REFERENCES `compteurs` (`compteur_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 CCOLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-
-
--- Drop the existing anomalies_consommation table if it exists
-DROP TABLE IF EXISTS `anomalies_consommation`;
-
--- Create the updated anomalies_consommation table with additional columns
 CREATE TABLE `anomalies_consommation` (
   `anomalie_id` int NOT NULL AUTO_INCREMENT,
   `consommation_id` int NOT NULL,
@@ -85,8 +72,6 @@ CREATE TABLE `anomalies_consommation` (
   CONSTRAINT `anomalies_consommation_ibfk_2` FOREIGN KEY (`previous_consommation_id`) REFERENCES `consommations_mensuelles` (`consommation_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Table reclamations
-DROP TABLE IF EXISTS `reclamations`;
 CREATE TABLE `reclamations` (
   `reclamation_id` int(11) NOT NULL AUTO_INCREMENT,
   `client_id` int(11) NOT NULL,
@@ -100,8 +85,6 @@ CREATE TABLE `reclamations` (
   CONSTRAINT `reclamations_fk_client` FOREIGN KEY (`client_id`) REFERENCES `clients` (`client_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Table pieces_jointes
-DROP TABLE IF EXISTS `pieces_jointes`;
 CREATE TABLE `pieces_jointes` (
   `piece_id` int NOT NULL AUTO_INCREMENT,
   `reclamation_id` int NOT NULL,
@@ -112,8 +95,6 @@ CREATE TABLE `pieces_jointes` (
   CONSTRAINT `pieces_jointes_fk_reclamation` FOREIGN KEY (`reclamation_id`) REFERENCES `reclamations` (`reclamation_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Table reponses
-DROP TABLE IF EXISTS `reponses`;
 CREATE TABLE `reponses` (
   `reponse_id` int NOT NULL AUTO_INCREMENT,
   `reclamation_id` int NOT NULL,
@@ -125,23 +106,32 @@ CREATE TABLE `reponses` (
   CONSTRAINT `reponses_fk_reclamation` FOREIGN KEY (`reclamation_id`) REFERENCES `reclamations` (`reclamation_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Insert data into tables
+-- Table factures
+CREATE TABLE `factures_mensuelle` (
+  `facture_id` int(11) NOT NULL AUTO_INCREMENT,
+  `client_id` int(11) NOT NULL,
+  `consommation_id` int(11) NOT NULL,
+  `montant` decimal(10,2) NOT NULL,
+  `consommation` decimal(10,2) NOT NULL,
+  `client_name` varchar(255) NOT NULL,
+  `date_emission` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`facture_id`),
+  KEY `client_id` (`client_id`),
+  KEY `consommation_id` (`consommation_id`),
+  CONSTRAINT `factures_mensuelle_ibfk_1` FOREIGN KEY (`client_id`) REFERENCES `clients` (`client_id`),
+  CONSTRAINT `factures_mensuelle_ibfk_2` FOREIGN KEY (`consommation_id`) REFERENCES `consommations_mensuelles` (`consommation_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Users data
 INSERT INTO `users` (`user_id`, `email`, `password_hash`, `role`, `created_at`) VALUES 
 (3, 'kihl@mail.com', '$2y$10$Tg0br9R43vKoTpkEU82pv.4IdimHVqgGXtUGXQvZP8AVYMN7M7vH6', 'fournisseur', '2025-03-31 21:52:44'),
 (4, 'youns@mail.com', '$2y$10$a5bQeRcigLAMYfKkiUgC1.kDy8EZzynEpYDgalEA/9I.1/2K9XZOy', 'client', '2025-04-01 16:18:51');
 
--- Clients data
 INSERT INTO `clients` (`client_id`, `user_id`, `full_name`, `address`, `phone`, `created_at`) VALUES 
 (1, 4, 'ELKIHAL YOUNESS', '13 RUE SALMA 2 TETOUAN', '+212638742013', '2025-01-28 23:21:14');
 
--- Compteurs data
 INSERT INTO `compteurs` (`compteur_id`, `client_id`, `numero_serie`) VALUES 
 (1, 1, 'C210298'),
 (2, 1, 'C213271');
 
--- Consommations_mensuelles data
--- Note: Removed the extra '0' or '1' values as they correspond to a removed 'est_anormale' column
 INSERT INTO `consommations_mensuelles` (`consommation_id`, `client_id`, `compteur_id`, `kw`, `image_path`, `created_at`) VALUES 
-(7, 1, 1, 1600.00, '../../uploads/meters/meter_1.jpg', '2025-03-01 10:00:00')
+(7, 1, 1, 1600.00, '../../uploads/meters/meter_1.jpg', '2025-03-01 10:00:00');

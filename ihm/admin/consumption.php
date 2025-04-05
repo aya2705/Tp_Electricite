@@ -214,11 +214,14 @@ $anomalies = $consommationService->getAllMonthlyConsumptionsWithAnomaly();
                 <a href="clients.php">
                     <i class="fas fa-users"></i> Gestion des clients
                 </a>
-                <a href="claims-frs.php">
-                    <i class="fas fa-exclamation-circle"></i> Réclamations
+                <a href="factures.php" >
+                    <i class="fas fa-file-invoice"></i> Gestion des factures
                 </a>
                 <a href="consumption.php" class="active">
                     <i class="fas fa-bolt"></i> Gestion des saisies
+                </a>
+                <a href="claims-frs.php">
+                    <i class="fas fa-exclamation-circle"></i> Réclamations
                 </a>
                 <a href="settings.php">
                     <i class="fas fa-cog"></i> Paramètres
@@ -324,7 +327,7 @@ $anomalies = $consommationService->getAllMonthlyConsumptionsWithAnomaly();
                             <th>Valeur saisie</th>
                             <th>Écart</th>
                             <th>Statut</th>
-                            <th>Actions</th>
+                            <th>Corriger</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -347,12 +350,9 @@ $anomalies = $consommationService->getAllMonthlyConsumptionsWithAnomaly();
                                     </td>
                                     <td><?php echo htmlspecialchars($anomaly->getStatus()); ?></td>
                                     <td>
-                                        <button class="btn btn-secondary btn-sm view-anomaly" data-id="<?php echo htmlspecialchars($anomaly->getAnomalyId()); ?>">
+                                        <a class="btn btn-secondary btn-sm view-anomaly" href="correction.php?id=<?php echo $anomaly->getAnomalyId(); ?>">
                                             <i class="fas fa-eye"></i>
-                                        </button>
-                                        <button class="btn btn-success btn-sm resolve-anomaly" data-id="<?php echo htmlspecialchars($anomaly->getAnomalyId()); ?>">
-                                            <i class="fas fa-check"></i>
-                                        </button>
+                            </a>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>

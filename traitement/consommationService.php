@@ -2,6 +2,8 @@
 require_once __DIR__ . '/../DB/consommationDAO.php';
 require_once __DIR__ . '/../models/consommationMensuelle.php';
 require_once __DIR__ . '/../models/monthlyConsumptionAnomaly.php'; // Include the anomaly model
+require_once __DIR__ . '/../traitement/FactureMensuelleService.php'; // Include the anomaly model
+
 // as a client i need to submit a monthly submission (kw + image)
 // when i submit a new monthly consumption (it should be stored in the data base (monthly consumption)) 
 // i need a function that will take in the clientId and the consumption oject
@@ -13,8 +15,10 @@ require_once __DIR__ . '/../models/monthlyConsumptionAnomaly.php'; // Include th
 
 class consommationService {
     private $consommationRepository;
+    private $factureMensuelleService;
     // here we will inject the data access object for consommationService
     public function __construct() {
+        $this->factureMensuelleService = new FactureMensuelleService();
         $this->consommationRepository = new ConsommationDAO();
     }
 
@@ -23,12 +27,13 @@ class consommationService {
         return $this->consommationRepository->getLastNormalConsumption($clientId);
     }
 
-    public function submitConsommationMensuelle($clientId, $consommationMensuelle)
-    {
+    public function submitConsommationMensuelle($clientId, $consommationMensuelle) {
         $lastNormalConsumption = $this->consommationRepository->getLastNormalConsumption($clientId);
         $previousKw = $lastNormalConsumption ? $lastNormalConsumption->getKw() : 0;
         $currentKw = $consommationMensuelle->getKw();
         $isAnomaly = $this->checkForMonthlyConsumptionAnomaly($clientId, $currentKw);
+
+        $clientName = $this->consommationRepository->getClientName($clientId);
 
         $saveResult = $this->consommationRepository->saveConsumption($clientId, $consommationMensuelle);
         $persistedConsumption = $saveResult['consumption'];
@@ -37,7 +42,6 @@ class consommationService {
         if ($isAnomaly) {
             $difference = abs($currentKw - $previousKw);
             $previousId = $lastNormalConsumption ? $lastNormalConsumption->getId() : null;
-            $clientName = $this->consommationRepository->getClientName($clientId);
             $entryDate = $persistedConsumption->getCreatedAt();
             $previousValue = $previousKw;
             $enteredValue = $currentKw;
@@ -55,8 +59,9 @@ class consommationService {
                 $imagePath
             );
             return ['status' => 'anomaly', 'consumption' => $persistedConsumption];
+
         } else {
-            // Generate invoice, etc.
+            $this->factureMensuelleService->submitFactureMensuelle($clientId, $clientName, $persistedConsumption );
             return ['status' => 'normal', 'consumption' => $persistedConsumption];
         }
     }
@@ -95,10 +100,15 @@ class consommationService {
         return $anomalies;
     }
 
+    // this should return a consumption related to an anomaly
+    public function getConsumptionByAnomalyId($anomalieId) {
+        return $this->consommationRepository->getConsumptionByAnomalyId($anomalieId);
+    }
     // as a Fournisseur after viewing the anomaly i need to correct it by updating the consumption and generating the facture
-    public function treatMonthlyConsumptionWithAnomaly($consumptionId, $correctedConsumptionKW){
-        // here we should retrieve the consumption 
-        // correctConsumption($consumptionId, $correctedConsumptionKW, true) // the true is for is abnormal
-        // then we should create a facture for this corrected consumption
+    public function treatMonthlyConsumptionWithAnomaly($anomalyId, $correctedKW){
+        // this should locate the consumption via anomaly Id , then correct consumption , then delete its reference in the anomaly table
+        // then return necessary info in order to generate a facture for that corrected consumption, in the for of an array.
+        $data = $this->consommationRepository->correctConsumptionAndDeleteAnomaly($anomalyId, $correctedKW);
+        $this->factureMensuelleService->submitFactureMensuelle($data['clientId'], $data['clientName'], $data['persistedConsumption'] );
     }
 }

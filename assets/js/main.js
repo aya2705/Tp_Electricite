@@ -17,33 +17,6 @@ function closeModal(modalId) {
     }
 }
 
-// Afficher une alerte
-function showAlert(message, type = 'info') {
-    // Créer l'élément alerte
-    const alertDiv = document.createElement('div');
-    alertDiv.className = `alert alert-${type}`;
-    alertDiv.textContent = message;
-    
-    // Trouver l'élément où afficher l'alerte
-    const mainContent = document.querySelector('.main-content');
-    if (mainContent) {
-        mainContent.insertBefore(alertDiv, mainContent.firstChild);
-        
-        // Supprimer l'alerte après quelques secondes
-        setTimeout(() => {
-            alertDiv.remove();
-        }, 5000);
-    }
-}
-
-// Fonction pour formater un prix
-function formatPrice(price) {
-    return new Intl.NumberFormat('fr-FR', { 
-        style: 'currency', 
-        currency: 'MAD'
-    }).format(price);
-}
-
 // Configuration des modals
 document.addEventListener('DOMContentLoaded', function() {
     // Fermeture des modals avec le bouton X
