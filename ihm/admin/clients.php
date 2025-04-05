@@ -183,6 +183,9 @@ $messages = [
                 <a href="clients.php" class="active">
                     <i class="fas fa-users"></i> Gestion des clients
                 </a>
+                <a href="factures.php">
+                    <i class="fas fa-file-invoice"></i> Gestion des factures
+                </a>
                 <a href="claims-frs.php">
                     <i class="fas fa-exclamation-circle"></i> Réclamations
                 </a>

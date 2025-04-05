@@ -30,6 +30,9 @@ $reclamationId = $_SESSION['reclamation_id'] ?? null;
                 <a href="clients.php">
                     <i class="fas fa-users"></i> Gestion des clients
                 </a>
+                <a href="factures.php">
+                    <i class="fas fa-file-invoice"></i> Gestion des factures
+                </a>
                 <a href="claims-frs.php" class="active">
                     <i class="fas fa-exclamation-circle"></i> Réclamations
                 </a>

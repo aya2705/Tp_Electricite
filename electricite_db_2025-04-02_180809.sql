@@ -57,7 +57,7 @@ CREATE TABLE `consommations_mensuelles` (
   KEY `compteur_id` (`compteur_id`),
   CONSTRAINT `consommations_mensuelles_ibfk_1` FOREIGN KEY (`client_id`) REFERENCES `clients` (`client_id`),
   CONSTRAINT `consommations_mensuelles_ibfk_2` FOREIGN KEY (`compteur_id`) REFERENCES `compteurs` (`compteur_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 CCOLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
 
@@ -84,7 +84,17 @@ CREATE TABLE `anomalies_consommation` (
   CONSTRAINT `anomalies_consommation_ibfk_1` FOREIGN KEY (`consommation_id`) REFERENCES `consommations_mensuelles` (`consommation_id`),
   CONSTRAINT `anomalies_consommation_ibfk_2` FOREIGN KEY (`previous_consommation_id`) REFERENCES `consommations_mensuelles` (`consommation_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
+-- Table factures
+CREATE TABLE `factures` (
+  `facture_id` int(11) NOT NULL,
+  `client_id` int(11) NOT NULL,
+  `periode` date NOT NULL,
+  `consommation` int(11) NOT NULL,
+  `montant` decimal(10,2) NOT NULL,
+  `statut_paiement` enum('payée','impayée') DEFAULT 'impayée',
+  `date_emission` date NOT NULL,
+  `tarif_id` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 -- Table reclamations
 DROP TABLE IF EXISTS `reclamations`;
 CREATE TABLE `reclamations` (

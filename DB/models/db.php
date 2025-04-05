@@ -2,7 +2,7 @@
 // Fichier de configuration pour la base de données
 class DB {
     private static $host = 'localhost';
-    private static $dbname = 'gestion_factures';
+    private static $dbname = 'electricity';
     private static $username = 'root';
     private static $password = '';
     private static $connection = null;

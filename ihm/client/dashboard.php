@@ -1,20 +1,29 @@
 <?php
 session_start();
-// Vérifier si l'utilisateur est connecté et qu'il s'agit d'un client
-
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'client') {
     header('Location: ../connexion.php');
     exit;
 }
 
-$clientId = $_SESSION['client_id'];
+require_once '../../DB/FactureDAO.php';
 require_once '../../traitement/consommationService.php';
 
+$clientId = $_SESSION['client_id'];
+
+// Initialize services
+$factureDAO = new FactureDAO();
 $consommationService = new ConsommationService();
+
+// Get client data
+$factures = $factureDAO->getClientFactures($clientId);
+$lastFacture = $factureDAO->getLastFactureByClientId($clientId);
 $lastConsumption = $consommationService->getLastMonthlyConsumption($clientId);
-// Formatage de la date pour l'affichage
+
+// Format data for display
 $consumptionDate = !empty($lastConsumption) ? date('F Y', strtotime($lastConsumption->getCreatedAt())) : 'N/A';
 $consumptionValue = !empty($lastConsumption) ? $lastConsumption->getKw() : 0;
+$lastFactureMontant = !empty($lastFacture) ? number_format($lastFacture['montant'], 2) : '0.00';
+$lastFacturePeriode = !empty($lastFacture) ? date('F Y', strtotime($lastFacture['periode'])) : 'N/A';
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -135,10 +144,10 @@ $consumptionValue = !empty($lastConsumption) ? $lastConsumption->getKw() : 0;
                     <p><?php echo $consumptionDate; ?></p>
                 </div>
                 <div class="stat-card">
-                    <h3>Dernière Facture</h3>
-                    <div class="value">32,500 MAD</div>
-                    <p>Novembre 2023</p>
-                </div>
+        <h3>Dernière Facture</h3>
+        <div class="value"><?php echo $lastFactureMontant; ?> MAD</div>
+        <p><?php echo $lastFacturePeriode; ?></p>
+    </div>
                 <div class="stat-card">
                     <h3>Moyenne Annuelle</h3>
                     <div class="value">310 kWh</div>
@@ -146,58 +155,54 @@ $consumptionValue = !empty($lastConsumption) ? $lastConsumption->getKw() : 0;
                 </div>
             </div>
 
-            <div class="card">
-                <div class="card-header">
-                    <h2>Factures Récentes</h2>
-                </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Référence</th>
-                            <th>Consommation</th>
-                            <th>Montant TTC</th>
-                            <th>Statut</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>15/11/2023</td>
-                            <td>FACT-2023-11</td>
-                            <td>325 kWh</td>
-                            <td>32,500 MAD</td>
-                            <td><span class="status-badge status-paid">Payée</span></td>
-                            <td>
-                                <a href="#" class="download-btn"><i class="fas fa-file-pdf"></i> PDF</a>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>15/10/2023</td>
-                            <td>FACT-2023-10</td>
-                            <td>315 kWh</td>
-                            <td>31,500 MAD</td>
-                            <td><span class="status-badge status-paid">Payée</span></td>
-                            <td>
-                                <a href="#" class="download-btn"><i class="fas fa-file-pdf"></i> PDF</a>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>15/09/2023</td>
-                            <td>FACT-2023-09</td>
-                            <td>330 kWh</td>
-                            <td>33,000 MAD</td>
-                            <td><span class="status-badge status-paid">Payée</span></td>
-                            <td>
-                                <a href="#" class="download-btn"><i class="fas fa-file-pdf"></i> PDF</a>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-                <div class="text-center mt-2">
-                    <a href="#" class="btn btn-secondary">Voir toutes les factures</a>
-                </div>
-            </div>
+            <!-- Update the factures table -->
+<div class="card">
+    <div class="card-header">
+        <h2>Factures Récentes</h2>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Période</th>
+                <th>N° Facture</th>
+                <th>Consommation</th>
+                <th>Montant</th>
+                <th>Date émission</th>
+                <th>Statut</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php if(!empty($factures)): ?>
+                <?php foreach($factures as $facture): ?>
+                    <tr>
+                        <td><?php echo date('m/Y', strtotime($facture['periode'])); ?></td>
+                        <td>FAC-<?php echo str_pad($facture['facture_id'], 6, '0', STR_PAD_LEFT); ?></td>
+                        <td><?php echo number_format($facture['consommation']); ?> kWh</td>
+                        <td><?php echo number_format($facture['montant'], 2); ?> MAD</td>
+                        <td><?php echo date('d/m/Y', strtotime($facture['date_emission'])); ?></td>
+                        <td>
+                            <span class="status-badge <?php echo $facture['statut_paiement'] === 'payée' ? 'status-paid' : 'status-unpaid'; ?>">
+                                <?php echo ucfirst($facture['statut_paiement']); ?>
+                            </span>
+                        </td>
+                        <td class="actions">
+    <a href="../../traitement/generate_pdf.php?id=<?php echo $facture['facture_id']; ?>" 
+       class="btn btn-sm btn-info" 
+       target="_blank">
+        <i class="fas fa-download"></i>
+    </a>
+</td>
+                    </tr>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <tr>
+                    <td colspan="7" class="text-center">Aucune facture disponible</td>
+                </tr>
+            <?php endif; ?>
+        </tbody>
+    </table>
+</div>
             
             <div class="card">
                 <div class="card-header">
