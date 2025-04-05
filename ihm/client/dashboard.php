@@ -1,23 +1,33 @@
 <?php
 session_start();
-// Vérifier si l'utilisateur est connecté et qu'il s'agit d'un client
-
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'client') {
     header('Location: ../connexion.php');
     exit;
 }
 
-$clientId = $_SESSION['client_id'];
 require_once '../../traitement/consommationService.php';
+require_once '../../traitement/FactureMensuelleService.php';
 
+$clientId = $_SESSION['client_id'];
+
+// Initialize services
+$factureMensuelleService = new FactureMensuelleService();
 $consommationService = new ConsommationService();
+
+// Get client data
+$factures = $factureMensuelleService->getAllFacturesByClient($clientId);
+$lastFacture = $factureMensuelleService->getLastFactureMensuelleByClient($clientId);
 $lastConsumption = $consommationService->getLastMonthlyConsumption($clientId);
-// Formatage de la date pour l'affichage
+
+// Format data for display
 $consumptionDate = !empty($lastConsumption) ? date('F Y', strtotime($lastConsumption->getCreatedAt())) : 'N/A';
 $consumptionValue = !empty($lastConsumption) ? $lastConsumption->getKw() : 0;
+$lastFactureMontant = !empty($lastFacture) ? number_format($lastFacture['montant'], 2) : '0.00';
+$lastFacturePeriode = !empty($lastFacture) ? date('F Y', strtotime($lastFacture['date_emission'])) : 'N/A';
 ?>
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -31,6 +41,7 @@ $consumptionValue = !empty($lastConsumption) ? $lastConsumption->getKw() : 0;
             gap: 20px;
             margin-bottom: 30px;
         }
+
         .stat-card {
             background: white;
             padding: 20px;
@@ -38,16 +49,19 @@ $consumptionValue = !empty($lastConsumption) ? $lastConsumption->getKw() : 0;
             box-shadow: var(--shadow);
             text-align: center;
         }
+
         .stat-card h3 {
             margin-bottom: 10px;
             color: var(--dark-color);
         }
+
         .stat-card .value {
             font-size: 32px;
             font-weight: bold;
             color: var(--secondary-color);
             margin-bottom: 5px;
         }
+
         .consumption-chart {
             height: 300px;
             background: white;
@@ -56,39 +70,47 @@ $consumptionValue = !empty($lastConsumption) ? $lastConsumption->getKw() : 0;
             box-shadow: var(--shadow);
             margin-bottom: 30px;
         }
+
         .status-badge {
             display: inline-block;
             padding: 3px 10px;
             border-radius: 12px;
             font-size: 12px;
         }
+
         .status-paid {
             background-color: #d4edda;
             color: #155724;
         }
+
         .status-unpaid {
             background-color: #f8d7da;
             color: #721c24;
         }
+
         .notification {
             display: flex;
             align-items: flex-start;
             padding: 15px 0;
             border-bottom: 1px solid #f0f0f0;
         }
+
         .notification:last-child {
             border-bottom: none;
         }
+
         .notification i {
             font-size: 18px;
             color: var(--secondary-color);
             margin-right: 15px;
             margin-top: 3px;
         }
+
         .notification-content h3 {
             font-size: 16px;
             margin: 0 0 5px 0;
         }
+
         .notification-date {
             color: #6c757d;
             font-size: 12px;
@@ -97,6 +119,7 @@ $consumptionValue = !empty($lastConsumption) ? $lastConsumption->getKw() : 0;
         }
     </style>
 </head>
+
 <body>
     <div class="app-container">
         <!-- Sidebar -->
@@ -122,11 +145,11 @@ $consumptionValue = !empty($lastConsumption) ? $lastConsumption->getKw() : 0;
                 </a>
             </div>
         </div>
-        
+
         <!-- Main Content -->
         <div class="main-content">
             <h1>Tableau de Bord</h1>
-            
+
             <!-- Dernière consommation -->
             <div class="dashboard-stats">
                 <div class="stat-card">
@@ -136,8 +159,8 @@ $consumptionValue = !empty($lastConsumption) ? $lastConsumption->getKw() : 0;
                 </div>
                 <div class="stat-card">
                     <h3>Dernière Facture</h3>
-                    <div class="value">32,500 MAD</div>
-                    <p>Novembre 2023</p>
+                    <div class="value"><?php echo $lastFactureMontant; ?> MAD</div>
+                    <p><?php echo $lastFacturePeriode; ?></p>
                 </div>
                 <div class="stat-card">
                     <h3>Moyenne Annuelle</h3>
@@ -146,6 +169,7 @@ $consumptionValue = !empty($lastConsumption) ? $lastConsumption->getKw() : 0;
                 </div>
             </div>
 
+            <!-- Update the factures table -->
             <div class="card">
                 <div class="card-header">
                     <h2>Factures Récentes</h2>
@@ -153,52 +177,41 @@ $consumptionValue = !empty($lastConsumption) ? $lastConsumption->getKw() : 0;
                 <table>
                     <thead>
                         <tr>
-                            <th>Date</th>
-                            <th>Référence</th>
+                            <th>Période</th>
+                            <th>N° Facture</th>
                             <th>Consommation</th>
-                            <th>Montant TTC</th>
-                            <th>Statut</th>
+                            <th>Montant</th>
+                            <th>Date émission</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td>15/11/2023</td>
-                            <td>FACT-2023-11</td>
-                            <td>325 kWh</td>
-                            <td>32,500 MAD</td>
-                            <td><span class="status-badge status-paid">Payée</span></td>
-                            <td>
-                                <a href="#" class="download-btn"><i class="fas fa-file-pdf"></i> PDF</a>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>15/10/2023</td>
-                            <td>FACT-2023-10</td>
-                            <td>315 kWh</td>
-                            <td>31,500 MAD</td>
-                            <td><span class="status-badge status-paid">Payée</span></td>
-                            <td>
-                                <a href="#" class="download-btn"><i class="fas fa-file-pdf"></i> PDF</a>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>15/09/2023</td>
-                            <td>FACT-2023-09</td>
-                            <td>330 kWh</td>
-                            <td>33,000 MAD</td>
-                            <td><span class="status-badge status-paid">Payée</span></td>
-                            <td>
-                                <a href="#" class="download-btn"><i class="fas fa-file-pdf"></i> PDF</a>
-                            </td>
-                        </tr>
+                        <?php if (!empty($factures)): ?>
+                            <?php foreach ($factures as $facture): ?>
+                                <tr>
+                                    <td><?php echo date('m/Y', strtotime($facture['date_emission'])); ?></td>
+                                    <td>FAC-<?php echo str_pad($facture['facture_id'], 6, '0', STR_PAD_LEFT); ?></td>
+                                    <td><?php echo number_format($facture['consommation']); ?> kWh</td>
+                                    <td><?php echo number_format($facture['montant'], 2); ?> MAD</td>
+                                    <td><?php echo date('d/m/Y', strtotime($facture['date_emission'])); ?></td>
+                                    <td class="actions">
+                                        <a href="../../traitement/generate_pdf.php?id=<?php echo $facture['facture_id']; ?>"
+                                            class="btn btn-sm btn-info"
+                                            target="_blank">
+                                            <i class="fas fa-download"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td colspan="7" class="text-center">Aucune facture disponible</td>
+                            </tr>
+                        <?php endif; ?>
                     </tbody>
                 </table>
-                <div class="text-center mt-2">
-                    <a href="#" class="btn btn-secondary">Voir toutes les factures</a>
-                </div>
             </div>
-            
+
             <div class="card">
                 <div class="card-header">
                     <h2>Notifications</h2>
@@ -225,4 +238,5 @@ $consumptionValue = !empty($lastConsumption) ? $lastConsumption->getKw() : 0;
         </div>
     </div>
 </body>
+
 </html>

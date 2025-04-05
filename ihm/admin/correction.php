@@ -1,77 +1,46 @@
 <?php
 session_start();
-// Vérifier que le client est authentifié via $_SESSION['user_id']
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'client') {
-    header('Location: ../connexion.php');
-    exit;
-}
 
 require_once '../../traitement/consommationService.php';
-require_once '../../models/consommationMensuelle.php';
-
-$clientId = $_SESSION['client_id'];
-
 $consommationService = new ConsommationService();
-$lastConsumption = $consommationService->getLastMonthlyConsumption($clientId);
-$consumptionDate = !empty($lastConsumption) ? date('F Y', strtotime($lastConsumption->getCreatedAt())) : 'N/A';
-$consumptionValue = !empty($lastConsumption) ? $lastConsumption->getKw() : 0;
-$imagePath = $lastConsumption ? $lastConsumption->getImagePath() : '';
-
-// Handle form submission
-$message = '';
-$messageType = '';
+$consumptionDate = 'null';
+$consumptionValue = 0;
+$imagePath = 'null';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
     try {
         $kw = filter_input(INPUT_POST, 'current-value', FILTER_VALIDATE_FLOAT);
-        $imagePath = null;
-        
-        if (isset($_FILES['meter-photo']) && $_FILES['meter-photo']['error'] === 0) {
-            $uploadDir = '../../uploads/meters/';
-            if (!file_exists($uploadDir)) {
-                mkdir($uploadDir, 0777, true);
-            }
-            
-            $fileName = uniqid() . '_' . $_FILES['meter-photo']['name'];
-            $imagePath = $uploadDir . $fileName;
-            
-            if (move_uploaded_file($_FILES['meter-photo']['tmp_name'], $imagePath)) {
-                $consumption = new ConsommationMensuelle($kw, $imagePath);
-                // echo $consumption->getKw();
-                // echo "<p>photo saved to directory and object created now calling the service to persist the consumption</p>";
-                $result = $consommationService->submitConsommationMensuelle($clientId, $consumption);
-                 
-                if ($result) {
-                    // echo "Good";
-                    header('Location: consommations.php');
-                    exit;
-                }
-            } else {
-                throw new Exception('Erreur lors du téléchargement de l\'image');
-            }
-        }
+        $consommationService->treatMonthlyConsumptionWithAnomaly($_GET['id'], $kw);
+        header('Location: factures.php');
+
     } catch (Exception $e) {
         $message = 'Erreur: ' . $e->getMessage();
         $messageType = 'error';
     }
+
+} else {
+$anomalyId = $_GET['id'];
+$consumptionToCorrect = $consommationService->getConsumptionByAnomalyId($anomalyId);
+$consumptionDate = !empty($consumptionToCorrect) ? date('F Y', strtotime($consumptionToCorrect->getCreatedAt())) : 'N/A';
+$consumptionValue = !empty($consumptionToCorrect) ? $consumptionToCorrect->getKw() : 0;
+$imagePath = $consumptionToCorrect ? $consumptionToCorrect->getImagePath() : '';
 }
 
-// Format date for display
-$consumptionDate = !empty($lastConsumption) ? date('F Y', strtotime($lastConsumption->getCreatedAt())) : 'N/A';
-$consumptionValue = !empty($lastConsumption) ? $lastConsumption->getKw() : 0;
-$imagePath = $lastConsumption ? $lastConsumption->getImagePath() : '';
+
 ?>
+
 <!DOCTYPE html>
 <html lang="fr">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Saisie de Consommation - Gestion des Factures</title>
+    <title>Gestion des Saisies - Gestion des Factures</title>
     <link rel="stylesheet" href="../../assets/css/main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        .consumption-form {
+         .consumption-form {
             max-width: 800px;
             margin: 0 auto;
         }
@@ -160,20 +129,26 @@ $imagePath = $lastConsumption ? $lastConsumption->getImagePath() : '';
         <!-- Sidebar -->
         <div class="sidebar">
             <div class="sidebar-header">
-                <h2>Espace Client</h2>
+                <h2>Espace Fournisseur</h2>
             </div>
             <div class="sidebar-menu">
                 <a href="dashboard.php">
                     <i class="fas fa-tachometer-alt"></i> Tableau de bord
                 </a>
-                <a href="consommations.php" class="active">
-                    <i class="fas fa-bolt"></i> Saisie Consommation
+                <a href="clients.php">
+                    <i class="fas fa-users"></i> Gestion des clients
                 </a>
-                <a href="claims.php">
+                <a href="factures.php" >
+                    <i class="fas fa-file-invoice"></i> Gestion des factures
+                </a>
+                <a href="consumption.php" class="active">
+                    <i class="fas fa-bolt"></i> Gestion des saisies
+                </a>
+                <a href="claims-frs.php">
                     <i class="fas fa-exclamation-circle"></i> Réclamations
                 </a>
-                <a href="profile.php">
-                    <i class="fas fa-user"></i> Mon Profil
+                <a href="settings.php">
+                    <i class="fas fa-cog"></i> Paramètres
                 </a>
                 <a href="../deconnexion.php" class="logout">
                     <i class="fas fa-sign-out-alt"></i> Déconnexion
@@ -183,11 +158,13 @@ $imagePath = $lastConsumption ? $lastConsumption->getImagePath() : '';
 
         <!-- Main Content -->
         <div class="main-content">
-            <h1>Saisie de Consommation</h1>
+            <h1>Rectification des Consommations</h1>
+
             <div class="card">
+
                 <div class="consumption-form">
                     <div class="previous-reading">
-                        <h3>Dernière Lecture</h3>
+                        <h3>Consommation</h3>
                         <div class="previous-details">
                             <div class="previous-value">
                                 <p>Relevé du compteur:</p>
@@ -195,8 +172,7 @@ $imagePath = $lastConsumption ? $lastConsumption->getImagePath() : '';
                                 <p>Date de relevé: <?php echo $consumptionDate; ?></p>
                             </div>
                             <div class="previous-photo">
-                                <img src="<?php echo htmlspecialchars($imagePath); ?>" 
-                                     alt="Photo du compteur précédent" 
+                                <img src="<?php echo htmlspecialchars($imagePath); ?>"  
                                      class="meter-photo"                  
                                      onclick="openPhotoModal(this.src)">
                                 <p><small>Cliquer pour agrandir</small></p>
@@ -204,22 +180,14 @@ $imagePath = $lastConsumption ? $lastConsumption->getImagePath() : '';
                         </div>
                     </div>
 
-                    <form id="consumption-form" method="POST" action="consommations.php" enctype="multipart/form-data">
+                    <form id="consumption-form" method="POST" action="correction.php?id=<?php echo $anomalyId  ?>" enctype="multipart/form-data">
                         <div class="form-group">
-                            <label for="current-value">Valeur actuelle du compteur (kWh)</label>
+                            <label for="current-value">Valeur correcte (kWh)</label>
                             <input type="number" name="current-value" id="current-value" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Photo du compteur</label>
-                            <div class="upload-container">
-                                <i class="fas fa-camera fa-2x"></i>
-                                <p>Déposez votre photo ici</p>
-                                <input type="file" name="meter-photo" id="meter-photo" accept="image/*" required>
-                            </div>
                         </div>
                         <div class="form-actions text-center mt-3">
                             <button type="submit" class="btn btn-primary">
-                                Soumettre la saisie
+                                Soumettre la consommation correcte
                             </button>
                         </div>
                     </form>
@@ -228,8 +196,8 @@ $imagePath = $lastConsumption ? $lastConsumption->getImagePath() : '';
         </div>
     </div>
 
-    <!-- Modal pour afficher la photo en grand -->
-    <div id="photo-modal" class="modal">
+<!-- Modal pour afficher la photo en grand -->
+<div id="photo-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
                 <h2>Photo du compteur</h2>
@@ -240,10 +208,8 @@ $imagePath = $lastConsumption ? $lastConsumption->getImagePath() : '';
             </div>
         </div>
     </div>
-    
     <script src="assets/js/main.js"></script>
     <script src="js/consumption.js"></script>
-    
 </body>
 
 </html>

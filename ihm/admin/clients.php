@@ -181,13 +181,16 @@ $messages = [
                     <i class="fas fa-tachometer-alt"></i> Tableau de bord
                 </a>
                 <a href="clients.php" class="active">
-                    <i class="fas fa-users"></i> Gestion des clients
+                    <i class="fas fa-users" ></i> Gestion des clients
                 </a>
-                <a href="claims-frs.php">
-                    <i class="fas fa-exclamation-circle"></i> Réclamations
+                <a href="factures.php">
+                    <i class="fas fa-file-invoice"></i> Gestion des factures
                 </a>
                 <a href="consumption.php">
                     <i class="fas fa-bolt"></i> Gestion des saisies
+                </a>
+                <a href="claims-frs.php">
+                    <i class="fas fa-exclamation-circle"></i> Réclamations
                 </a>
                 <a href="settings.php">
                     <i class="fas fa-cog"></i> Paramètres
