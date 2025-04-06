@@ -1,5 +1,5 @@
 <?php
-require_once '../../models/consommationMensuelle.php';
+require_once __DIR__ . '/../models/consommationMensuelle.php';
 require_once 'connexion.php';
 class ConsommationDAO
 {
@@ -165,6 +165,36 @@ public function getAllAnomalies()
     ");
     $stmt->execute();
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+/**
+ * Calculate total consumption for a client in a specific year
+ * 
+ * @param int $clientId The client ID
+ * @param int $annee The year
+ * @return float The total consumption in kWh
+ */
+public function calculerConsommationTotaleAnnuelle($clientId, $annee) 
+{
+    try {
+        $stmt = $this->db->prepare("
+            SELECT SUM(kw) as total_consommation
+            FROM consommations_mensuelles
+            WHERE client_id = :client_id 
+            AND YEAR(created_at) = :annee
+        ");
+        
+        $stmt->execute([
+            'client_id' => $clientId,
+            'annee' => $annee
+        ]);
+        
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result['total_consommation'] ? floatval($result['total_consommation']) : 0;
+    } catch (PDOException $e) {
+        error_log("Error calculating annual consumption: " . $e->getMessage());
+        return 0;
+    }
 }
     /* 
     public function saveConsumption($clientId, $consommationMensuelle)

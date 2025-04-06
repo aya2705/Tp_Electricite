@@ -14,26 +14,41 @@ switch ($action) {
     case 'authenticate':
         $email = $_POST['email'] ?? '';
         $password = $_POST['password'] ?? '';
-
+    
         if (empty($email) || empty($password)) {
             header("Location: ../index.php?error=emptyFields");
             exit;
         }
-
+    
         try {
             $user = $userDAO->getUserByEmail($email);
             if ($user && password_verify($password, $user->getPasswordHash())) {
                 $_SESSION['user_id'] = $user->getUserId();
                 $_SESSION['role'] = $user->getRole();
-                if ($user->getRole() === 'client') {
-                    // Récupérer le client pour stocker son ID dans la session
-                    $clientDAO = new ClientDAO();
-                    $client = $clientDAO->getClientByUserId($user->getUserId());
-                    if ($client) {
-                        $_SESSION['client_id'] = $client->getClientId();
-                    }
+                
+                // Different redirects based on role
+                switch($user->getRole()) {
+                    case 'client':
+                        $client = $clientDAO->getClientByUserId($user->getUserId());
+                        if ($client) {
+                            $_SESSION['client_id'] = $client->getClientId();
+                        }
+                        $redirect = '../ihm/client/dashboard.php';
+                        break;
+                        
+                    case 'fournisseur':
+                        $redirect = '../ihm/admin/dashboard.php';
+                        break;
+                        
+                    case 'agent':
+                        $redirect = '../ihm/agent/dashboard.php';
+                        break;
+                        
+                    default:
+                        header("Location: ../index.php?error=invalidRole");
+                        exit;
                 }
-                $redirect = $user->getRole() === 'fournisseur' ? '../ihm/admin/dashboard.php' : '../ihm/client/dashboard.php';
+                
                 header("Location: $redirect");
                 exit;
             } else {

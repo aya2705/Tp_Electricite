@@ -11,20 +11,33 @@ class ClientDAO
         $this->db = Database::getInstance()->getConnection();
     }
 
-    public function getClientById($client_id)
-    {
-        $stmt = $this->db->prepare("SELECT * FROM clients WHERE client_id = :client_id AND user_id IS NULL");
-        $stmt->execute(['client_id' => $client_id]);
+    /**
+ * Get client by ID
+ * 
+ * @param int $clientId The client ID
+ * @return Client|null The client or null if not found
+ */
+public function getClientById($clientId) {
+    try {
+        $stmt = $this->db->prepare("SELECT * FROM clients WHERE client_id = :client_id");
+        $stmt->execute(['client_id' => $clientId]);
         $row = $stmt->fetch();
-        return $row ? new Client(
-            $row['client_id'], 
-            $row['user_id'], 
-            $row['full_name'], 
-            $row['address'], 
-            $row['phone'], 
+
+        if (!$row) return null;
+
+        return new Client(
+            $row['client_id'],
+            $row['user_id'],
+            $row['full_name'],
+            $row['address'],
+            $row['phone'],
             $row['created_at']
-        ) : null;
+        );
+    } catch (PDOException $e) {
+        error_log("Error fetching client by ID: " . $e->getMessage());
+        return null;
     }
+}
 
     public function getClientByUserId($user_id)
     {
