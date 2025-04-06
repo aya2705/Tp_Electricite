@@ -1,4 +1,6 @@
 <?php
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
 session_start();
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'client') {
     header('Location: ../connexion.php');
@@ -7,6 +9,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'client') {
 
 require_once '../../traitement/consommationService.php';
 require_once '../../traitement/FactureMensuelleService.php';
+require_once '../../traitement/notificationService.php';
 
 $clientId = $_SESSION['client_id'];
 
@@ -24,6 +27,10 @@ $consumptionDate = !empty($lastConsumption) ? date('F Y', strtotime($lastConsump
 $consumptionValue = !empty($lastConsumption) ? $lastConsumption->getKw() : 0;
 $lastFactureMontant = !empty($lastFacture) ? number_format($lastFacture['montant'], 2) : '0.00';
 $lastFacturePeriode = !empty($lastFacture) ? date('F Y', strtotime($lastFacture['date_emission'])) : 'N/A';
+
+// Utiliser la classe NotificationDAO
+$notificationDAO = new NotificationDAO();
+$notifications = $notificationDAO->getNotifications($clientId);
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -35,88 +42,7 @@ $lastFacturePeriode = !empty($lastFacture) ? date('F Y', strtotime($lastFacture[
     <link rel="stylesheet" href="../../assets/css/main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        .dashboard-stats {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .stat-card {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: var(--shadow);
-            text-align: center;
-        }
-
-        .stat-card h3 {
-            margin-bottom: 10px;
-            color: var(--dark-color);
-        }
-
-        .stat-card .value {
-            font-size: 32px;
-            font-weight: bold;
-            color: var(--secondary-color);
-            margin-bottom: 5px;
-        }
-
-        .consumption-chart {
-            height: 300px;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: var(--shadow);
-            margin-bottom: 30px;
-        }
-
-        .status-badge {
-            display: inline-block;
-            padding: 3px 10px;
-            border-radius: 12px;
-            font-size: 12px;
-        }
-
-        .status-paid {
-            background-color: #d4edda;
-            color: #155724;
-        }
-
-        .status-unpaid {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-
-        .notification {
-            display: flex;
-            align-items: flex-start;
-            padding: 15px 0;
-            border-bottom: 1px solid #f0f0f0;
-        }
-
-        .notification:last-child {
-            border-bottom: none;
-        }
-
-        .notification i {
-            font-size: 18px;
-            color: var(--secondary-color);
-            margin-right: 15px;
-            margin-top: 3px;
-        }
-
-        .notification-content h3 {
-            font-size: 16px;
-            margin: 0 0 5px 0;
-        }
-
-        .notification-date {
-            color: #6c757d;
-            font-size: 12px;
-            display: block;
-            margin-top: 5px;
-        }
+       
     </style>
 </head>
 
@@ -212,7 +138,7 @@ $lastFacturePeriode = !empty($lastFacture) ? date('F Y', strtotime($lastFacture[
                 </table>
             </div>
 
-            <div class="card">
+            <!-- <div class="card">
                 <div class="card-header">
                     <h2>Notifications</h2>
                 </div>
@@ -233,6 +159,55 @@ $lastFacturePeriode = !empty($lastFacture) ? date('F Y', strtotime($lastFacture[
                             <span class="notification-date">Il y a 2 jours</span>
                         </div>
                     </div>
+                </div>
+            </div> -->
+
+            <div class="card">
+                <div class="card-header">
+                    <h2>Notifications</h2>
+
+                </div>
+
+                <div class="card-body p-0">
+                    <?php if (!empty($notifications)): ?>
+                        <div id="notifications-container" class="table-responsive">
+                            <table class="table table-hover">
+                                
+                                <tbody>
+                                    <?php foreach ($notifications as $notification): ?>
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex flex-column">
+                                                    <p class="contenu-notif"><?= htmlspecialchars($notification['contenu']) ?>
+                                                    </p>
+                                                    <div class="d-flex justify-content-between">
+                                                        <small
+                                                            class="date-notif"><?= date('d/m/Y H:i', strtotime($notification['date_reponse'])) ?></small>
+                                                        <small class="status-notif">Statut:
+                                                            <?= $notification['status'] ?></small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="align-middle text-center">
+                                            <form method="post" action="../../traitement/notificationService.php" class="d-inline">
+                                                <input type="hidden" name="action" value="delete">
+                                                <input type="hidden" name="notificationId" value="<?= $notification['reponse_id'] ?>">
+                                                <button type="submit" class="supp-btn"><i class="fa-solid fa-trash"></i></button>
+                                            </form>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                    <?php else: ?>
+                        <div class="text-center py-4">
+                            <p class="text-muted">Aucune nouvelle notification.</p>
+                        </div>
+                    <?php endif; ?>
+
+                   
                 </div>
             </div>
         </div>
