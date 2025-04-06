@@ -152,7 +152,7 @@ class ReclamationDAO {
     // Enregistrer une réponse dans notifications
 public static function enregistrerReponse(notification $notif) {
     $conn = Database::getInstance()->getConnection();
-    $sql = "INSERT INTO notifications (reclamation_id, contenu, status) 
+    $sql = "INSERT INTO reponses (reclamation_id, contenu, status) 
             VALUES (:reclamation_id, :contenu, :status)
             ON DUPLICATE KEY UPDATE 
                 contenu = :contenu, 

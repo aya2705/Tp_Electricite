@@ -122,6 +122,19 @@ CREATE TABLE `factures_mensuelle` (
   CONSTRAINT `factures_mensuelle_ibfk_2` FOREIGN KEY (`consommation_id`) REFERENCES `consommations_mensuelles` (`consommation_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+CREATE TABLE `notifications` (
+  `notification_id` INT AUTO_INCREMENT PRIMARY KEY,
+  `client_id` INT NOT NULL,
+  `type` ENUM('saisie_consommation', 'facture', 'reclamation', 'autre') NOT NULL,
+  `reference` VARCHAR(255) DEFAULT NULL,
+  `content` TEXT NOT NULL,
+  `status` ENUM('non_lue', 'lue') DEFAULT 'non_lue',
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `read_at` DATETIME DEFAULT NULL,
+  CONSTRAINT `fk_notification_client` FOREIGN KEY (`client_id`)
+    REFERENCES `clients` (`client_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 INSERT INTO `users` (`user_id`, `email`, `password_hash`, `role`, `created_at`) VALUES 
 (3, 'kihl@mail.com', '$2y$10$Tg0br9R43vKoTpkEU82pv.4IdimHVqgGXtUGXQvZP8AVYMN7M7vH6', 'fournisseur', '2025-03-31 21:52:44'),
 (4, 'youns@mail.com', '$2y$10$a5bQeRcigLAMYfKkiUgC1.kDy8EZzynEpYDgalEA/9I.1/2K9XZOy', 'client', '2025-04-01 16:18:51');
@@ -136,5 +149,3 @@ INSERT INTO `compteurs` (`compteur_id`, `client_id`, `numero_serie`) VALUES
 INSERT INTO `consommations_mensuelles` (`consommation_id`, `client_id`, `compteur_id`, `kw`, `image_path`, `created_at`) VALUES 
 (7, 1, 1, 1600.00, '../../uploads/meters/meter_1.jpg', '2025-03-01 10:00:00');
 
--- 
-rename table `reponses` to `notifications`;

@@ -14,7 +14,7 @@ require_once 'connexion.php';  // Assurez-vous d'inclure la classe Database
  
      public function getNotifications($userId) {
          // Sélectionner les notifications non lues liées aux réclamations du client
-         $query = "SELECT * FROM notifications WHERE reclamation_id IN 
+         $query = "SELECT * FROM reponses WHERE reclamation_id IN 
                    (SELECT reclamation_id FROM reclamations WHERE client_id = :user_id) 
                    ORDER BY date_reponse DESC";
          
@@ -29,7 +29,7 @@ require_once 'connexion.php';  // Assurez-vous d'inclure la classe Database
     
  
      public function deleteNotification($notificationId) {
-         $query = "DELETE FROM notifications WHERE reponse_id = :notification_id";
+         $query = "DELETE FROM reponses WHERE reponse_id = :notification_id";
          $stmt = $this->pdo->prepare($query);
          $stmt->bindParam(':notification_id', $notificationId, PDO::PARAM_INT);
          return $stmt->execute();
