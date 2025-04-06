@@ -10,15 +10,9 @@ require_once 'connexion.php';  // Assurez-vous d'inclure la classe Database
          $this->pdo = Database::getInstance()->getConnection();
      }
  
-     public function getNotifications($userId) {
-         $query = "SELECT * FROM notifications WHERE user_id = :user_id ORDER BY created_at DESC";
-         $stmt = $this->pdo->prepare($query);
-         $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
-         $stmt->execute();
-         return $stmt->fetchAll(PDO::FETCH_ASSOC);
-     }
+   
  
-     public function getUnreadNotifications($userId) {
+     public function getNotifications($userId) {
          // Sélectionner les notifications non lues liées aux réclamations du client
          $query = "SELECT * FROM reclamation_notif WHERE reclamation_id IN 
                    (SELECT reclamation_id FROM reclamations WHERE client_id = :user_id) 

@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Connexion - Gestion des Factures d'Électricité</title>
     <link rel="stylesheet" href="../assets/css/login.css">
+    <!-- <link rel="stylesheet" href="../assets/css/main.css"> -->
     <style>
 
 .login-container {
@@ -183,7 +184,7 @@ input:checked + .slider:before {
         ?>
         <div class="login-form">
             <h2>Connexion</h2>
-            <form method="POST" action="traitement/userService.php?action=authenticate">
+            <form method="POST" action="../traitement/userService.php?action=authenticate">
                 <div class="form-group">
                     <label for="email">Email</label>
                     <input type="email" id="email" name="email" required>

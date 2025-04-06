@@ -1,5 +1,8 @@
 <?php
 require_once "connexion.php";
+require_once __DIR__ . "/../models/reclamation.php";
+require_once __DIR__ . "/../models/piecesJointes.php";
+require_once __DIR__ . "/../models/notification.php";
 
 class ReclamationDAO {
 
@@ -19,49 +22,69 @@ class ReclamationDAO {
     }
 
     public static function addReclamation($client_id, $type, $description, $statut) { 
-        $conn = Database::getInstance()->getConnection(); // Obtenir la connexion à la base de données
+        $conn = Database::getInstance()->getConnection();
         $sql = "INSERT INTO reclamations (client_id, type, description, statut) VALUES (?, ?, ?, ?)";
         $stmt = $conn->prepare($sql);
-    
+
         if ($stmt->execute([$client_id, $type, $description, $statut])) {
-            return $conn->lastInsertId(); // Retourner l'ID de la dernière insertion
+            return $conn->lastInsertId();
         }
-    
-        return false; // Retourner false en cas d'échec
+
+        return false;
     }
 
-    public static function addPieceJointe($reclamation_id, $fileName, $type) {
+    // Ajoute une pièce jointe à une réclamation existante
+    public static function addPieceJointe(PiecesJointes $pieceJointe) {
         $conn = Database::getInstance()->getConnection();
     
-        // Vérifier si la réclamation existe (évite l'erreur de clé étrangère)
+        // Vérifier si la réclamation existe
         $checkSql = "SELECT COUNT(*) FROM reclamations WHERE reclamation_id = ?";
         $checkStmt = $conn->prepare($checkSql);
-        $checkStmt->execute([$reclamation_id]);
+        $checkStmt->execute([$pieceJointe->getReclamationId()]);
         $exists = $checkStmt->fetchColumn();
     
         if ($exists == 0) {
-            throw new Exception("Réclamation ID invalide: $reclamation_id");
+            throw new Exception("Réclamation ID invalide: " . $pieceJointe->getReclamationId());
         }
     
         // Insérer la pièce jointe
         $sql = "INSERT INTO pieces_jointes (reclamation_id, file_path, type) VALUES (?, ?, ?)";
         $stmt = $conn->prepare($sql);
     
-        if (!$stmt->execute([$reclamation_id, $fileName, $type])) {
-            throw new Exception("Échec d'insertion de la pièce jointe pour la réclamation ID: $reclamation_id");
+        if (!$stmt->execute([
+            $pieceJointe->getReclamationId(),
+            $pieceJointe->getFilePath(),
+            $pieceJointe->getType()
+        ])) {
+            throw new Exception("Échec d'insertion de la pièce jointe pour la réclamation ID: " . $pieceJointe->getReclamationId());
         }
     
         return true;
     }
-
+    
+// Fonction pour récupérer toutes les réclamations
     public static function getAllReclamations() {
         $conn = Database::getInstance()->getConnection();
         $sql = "SELECT * FROM reclamations ORDER BY date_creation DESC";
         $stmt = $conn->prepare($sql);
         $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
+        
+        // Créer des objets Reclamation pour chaque ligne retournée
+        $reclamations = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $reclamations[] = new Reclamation(
+                $row['reclamation_id'],
+                $row['client_id'],
+                $row['type'],
+                $row['description'],
+                $row['statut'],
+                $row['date_creation'],
+                $row['date_resolution']
+            );
+        }
 
+        return $reclamations; // Retourner un tableau d'objets Reclamation
+    }
     // Méthode pour récupérer un client par son ID
     public static function getClientById($clientId ) { 
         $conn = Database::getInstance()->getConnection(); 
@@ -122,26 +145,32 @@ class ReclamationDAO {
         return $reclamation;
     }
 
+
     /**
      * Enregistrer ou mettre à jour une réponse
      */
-    public static function enregistrerReponse($reclamation_id, $contenu, $statut) {
-        $conn = Database::getInstance()->getConnection();
-        $sql = "INSERT INTO reclamation_notif (reclamation_id, contenu, status) 
-                VALUES (:reclamation_id, :contenu, :status)
-                ON DUPLICATE KEY UPDATE contenu = :contenu, status = :status, date_reponse = CURRENT_TIMESTAMP";
-        $stmt = $conn->prepare($sql);
-        return $stmt->execute([
-            ':reclamation_id' => $reclamation_id,
-            ':contenu' => $contenu,
-            ':status' => $statut
-        ]);
-    }
+    // Enregistrer une réponse dans reclamation_notif
+public static function enregistrerReponse(notification $notif) {
+    $conn = Database::getInstance()->getConnection();
+    $sql = "INSERT INTO reclamation_notif (reclamation_id, contenu, status) 
+            VALUES (:reclamation_id, :contenu, :status)
+            ON DUPLICATE KEY UPDATE 
+                contenu = :contenu, 
+                status = :status, 
+                date_reponse = CURRENT_TIMESTAMP";
+    $stmt = $conn->prepare($sql);
+    return $stmt->execute([
+        ':reclamation_id' => $notif->getReclamationId(),
+        ':contenu' => $notif->getContenu(),
+        ':status' => $notif->getStatut()
+    ]);
+}
+
 
     /**
      * Mettre à jour le statut d'une réclamation
      */
-    public static function mettreAJourStatutReclamation($reclamation_id, $statut) {
+    public static function mettreAJourStatutReclamation(reclamation $reclamation) {
         $conn = Database::getInstance()->getConnection();
         $sql = "UPDATE reclamations 
                 SET statut = :statut, 
@@ -149,40 +178,37 @@ class ReclamationDAO {
                 WHERE reclamation_id = :reclamation_id";
         $stmt = $conn->prepare($sql);
         return $stmt->execute([
-            ':statut' => $statut,
-            ':reclamation_id' => $reclamation_id
+            ':statut' => $reclamation->getStatut(),
+            ':reclamation_id' => $reclamation->getReclamationId()
         ]);
     }
+    
 
     /**
      * Traiter une réponse et mettre à jour la réclamation
      */
-    public static function traiterReponse($reclamation_id, $response_text, $claim_status) {
-        if ($reclamation_id > 0 && !empty($response_text)) {
-            try {
-                $conn = Database::getInstance()->getConnection();
-                $conn->beginTransaction();
-                
-                // Enregistrer la réponse
-                if (!self::enregistrerReponse($reclamation_id, $response_text, $claim_status)) {
-                    throw new Exception("Erreur lors de l'enregistrement de la réponse.");
-                }
-                
-                // Mettre à jour le statut de la réclamation
-                if (!self::mettreAJourStatutReclamation($reclamation_id, $claim_status)) {
-                    throw new Exception("Erreur lors de la mise à jour du statut.");
-                }
-                
-                $conn->commit();
-                return true;
-            } catch (Exception $e) {
-                $conn->rollBack();
-                error_log("Erreur: " . $e->getMessage());
-                return false;
+    public static function traiterReponse(notification $notif, reclamation $reclamation) {
+        try {
+            $conn = Database::getInstance()->getConnection();
+            $conn->beginTransaction();
+    
+            if (!self::enregistrerReponse($notif)) {
+                throw new Exception("Erreur lors de l'enregistrement de la réponse.");
             }
+    
+            if (!self::mettreAJourStatutReclamation($reclamation)) {
+                throw new Exception("Erreur lors de la mise à jour du statut.");
+            }
+    
+            $conn->commit();
+            return true;
+    
+        } catch (Exception $e) {
+            $conn->rollBack();
+            error_log("Erreur: " . $e->getMessage());
+            return false;
         }
-        return false;
     }
-}
+}  
 
 ?>

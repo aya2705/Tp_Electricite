@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', function() {
  });
 
 
- // Fonction pour remplir les informations dans le modal
+//  // Fonction pour remplir les informations dans le modal
  function fillClaimDetails(claimData) {
     document.getElementById('client-name').textContent = claimData.clientName;
     document.getElementById('client-id').textContent = claimData.clientId;
@@ -109,3 +109,163 @@ loadClaimDetails(123); // Remplace 123 par l'ID réel de la réclamation
 
 
 
+
+document.addEventListener("DOMContentLoaded", function () {
+    document.addEventListener("click", function (event) {
+        if (event.target.closest(".action-process")) {
+            let button = event.target.closest(".action-process");
+            let reclamationId = button.getAttribute("data-id").replace("REF-", "");
+            let detailsContainer = document.querySelector(".claim-detail-info");
+
+            if (!detailsContainer) {
+                console.error("Erreur : le conteneur des détails de réclamation est introuvable.");
+                return;
+            }
+
+            fetch("../../traitement/reclamationService.php?reclamationId=" + reclamationId)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Erreur réseau");
+                    }
+                    return response.text();
+                })
+                .then(data => {
+                    detailsContainer.innerHTML = data;
+                })
+                .catch(error => console.error("Erreur :", error));
+        }
+    });
+});
+
+// Informations sur la réclamation
+document.addEventListener("DOMContentLoaded", function () {
+    document.addEventListener("click", function (event) {
+        if (event.target.closest(".action-process")) {
+            let button = event.target.closest(".action-process");
+            let reclamationId = button.getAttribute("data-id").replace("REF-", "");
+
+            // Mettre à jour le champ hidden du formulaire avec l'ID de la réclamation
+            document.getElementById("reclamation_id").value = reclamationId;
+
+            let detailsContainer = document.querySelector(".claim-detail-info");
+
+            if (!detailsContainer) {
+                console.error("Erreur : le conteneur des détails de réclamation est introuvable.");
+                return;
+            }
+
+            // Charger les détails de la réclamation
+            fetch("../../traitement/reclamationService.php?reclamationId=" + reclamationId)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Erreur réseau");
+                    }
+                    return response.text();
+                })
+                .then(data => {
+                    detailsContainer.innerHTML = data;
+                    document.getElementById("process-claim-modal").classList.remove("hidden"); // Afficher le modal
+                })
+                .catch(error => console.error("Erreur :", error));
+        }
+    });
+
+    // Fermer le modal quand on clique sur le bouton de fermeture
+    document.querySelector(".close").addEventListener("click", function () {
+        document.getElementById("process-claim-modal").classList.add("hidden");
+    });
+});
+
+// pour la pagination
+
+document.addEventListener("DOMContentLoaded", function() {
+    // Exemple de réclamations dynamiques (remplacez ceci par vos données réelles)
+    
+
+    const itemsPerPage = 5; // Nombre d'éléments par page
+    let currentPage = 1; // Page actuelle
+
+    // Fonction pour afficher les réclamations sur la page
+    function renderClaims(page) {
+        const start = (page - 1) * itemsPerPage;
+        const end = page * itemsPerPage;
+        const claimsToShow = reclamations.slice(start, end);
+
+        const claimsList = document.getElementById("claims-list");
+        claimsList.innerHTML = ''; // Réinitialiser la liste avant de la remplir
+
+        claimsToShow.forEach(claim => {
+            const claimItem = document.createElement('div');
+            claimItem.classList.add('claim-item');
+            claimItem.innerHTML = `
+                <div class="claim-icon">
+                    <i class="fas ${claim.type === 'fuite_externe' ? 'fa-tint' : 'fa-file-invoice'}"></i>
+                </div>
+                <div class="claim-content">
+                    <h3>${claim.type}</h3>
+                    <p>${claim.description}</p>
+                    <div class="claim-meta">
+                        <div><span class="claim-type">${claim.type}</span></div>
+                        <span>Soumise le ${claim.date}</span>
+                    </div>
+                </div>
+            `;
+            claimsList.appendChild(claimItem);
+        });
+
+        renderPagination();
+    }
+
+    // Fonction pour afficher les liens de pagination
+    function renderPagination() {
+        const totalPages = Math.ceil(reclamations.length / itemsPerPage);
+        const pagination = document.getElementById("pagination");
+        pagination.innerHTML = ''; // Réinitialiser la pagination
+
+        // Précédent
+        if (currentPage > 1) {
+            const prevLink = document.createElement('a');
+            prevLink.href = "#";
+            prevLink.textContent = "« Précédent";
+            prevLink.addEventListener("click", function() {
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderClaims(currentPage);
+                }
+            });
+            pagination.appendChild(prevLink);
+        }
+
+        // Pages
+        for (let i = 1; i <= totalPages; i++) {
+            const pageLink = document.createElement('a');
+            pageLink.href = "#";
+            pageLink.textContent = i;
+            if (i === currentPage) {
+                pageLink.classList.add('active');
+            }
+            pageLink.addEventListener("click", function() {
+                currentPage = i;
+                renderClaims(currentPage);
+            });
+            pagination.appendChild(pageLink);
+        }
+
+        // Suivant
+        if (currentPage < totalPages) {
+            const nextLink = document.createElement('a');
+            nextLink.href = "#";
+            nextLink.textContent = "Suivant »";
+            nextLink.addEventListener("click", function() {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    renderClaims(currentPage);
+                }
+            });
+            pagination.appendChild(nextLink);
+        }
+    }
+
+    // Initialiser la page avec les réclamations de la première page
+    renderClaims(currentPage);
+});

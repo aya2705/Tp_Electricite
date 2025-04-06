@@ -30,7 +30,8 @@ $lastFacturePeriode = !empty($lastFacture) ? date('F Y', strtotime($lastFacture[
 
 // Utiliser la classe NotificationDAO
 $notificationDAO = new NotificationDAO();
-$notifications = $notificationDAO->getUnreadNotifications($clientId);
+$notifications = $notificationDAO->getNotifications($clientId);
+
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -154,9 +155,11 @@ $notifications = $notificationDAO->getUnreadNotifications($clientId);
         }
 
         .card .supp-btn {
-            background-color:rgb(230, 178, 184);
+            background-color:blue;
             color: white;
             border: none;
+            margin-left: 50%;
+            width: fit-content;
             padding: 5px 10px;
             border-radius: 5px;
             cursor: pointer;
@@ -283,11 +286,12 @@ $notifications = $notificationDAO->getUnreadNotifications($clientId);
             <div class="card">
                 <div class="card-header">
                     <h2>Notifications</h2>
+
                 </div>
 
                 <div class="card-body p-0">
                     <?php if (!empty($notifications)): ?>
-                        <div class="table-responsive">
+                        <div id="notifications-container" class="table-responsive">
                             <table class="table table-hover">
                                 
                                 <tbody>
@@ -317,17 +321,25 @@ $notifications = $notificationDAO->getUnreadNotifications($clientId);
                                 </tbody>
                             </table>
                         </div>
+                        
                     <?php else: ?>
                         <div class="text-center py-4">
                             <p class="text-muted">Aucune nouvelle notification.</p>
                         </div>
                     <?php endif; ?>
+
+                   
                 </div>
             </div>
 
             
         </div>
     </div>
+
+    <script>
+        
+
+    </script>
 </body>
 
 </html>
