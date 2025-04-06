@@ -138,33 +138,11 @@ $notifications = $notificationDAO->getNotifications($clientId);
                 </table>
             </div>
 
-            <!-- <div class="card">
-                <div class="card-header">
-                    <h2>Notifications</h2>
-                </div>
-                <div class="notification-list">
-                    <div class="notification">
-                        <i class="fas fa-bell"></i>
-                        <div class="notification-content">
-                            <h3>Saisie de consommation disponible</h3>
-                            <p>Vous pouvez maintenant saisir votre consommation pour le mois de Novembre 2023.</p>
-                            <span class="notification-date">Aujourd'hui</span>
-                        </div>
-                    </div>
-                    <div class="notification">
-                        <i class="fas fa-check-circle"></i>
-                        <div class="notification-content">
-                            <h3>Réclamation traitée</h3>
-                            <p>Votre réclamation #REF-2023-42 a été traitée. Consultez les détails.</p>
-                            <span class="notification-date">Il y a 2 jours</span>
-                        </div>
-                    </div>
-                </div>
-            </div> -->
+        
 
             <div class="card">
                 <div class="card-header">
-                    <h2>Notifications</h2>
+                    <h2 class="notif">Notifications</h2>
 
                 </div>
 

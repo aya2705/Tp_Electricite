@@ -1001,8 +1001,9 @@ input:checked+.toggle-slider:before {
 
  /* Notif */
 
- .card h2 {
+ .notif {
     font-size: 30px;
+    color: red;
     font-weight: 600;
 }
 
