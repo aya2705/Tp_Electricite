@@ -110,5 +110,72 @@ function loadClaimDetails(claimId) {
 // Exemple d'appel pour charger les données de la réclamation avec un ID spécifique
 loadClaimDetails(123); // Remplace 123 par l'ID réel de la réclamation
 
+// affichage des details de la réclamation
+
+document.addEventListener("DOMContentLoaded", function () {
+    document.addEventListener("click", function (event) {
+        if (event.target.closest(".action-process")) { 
+            let button = event.target.closest(".action-process");
+            let reclamationId = button.getAttribute("data-id").replace("REF-", "");
+            let detailsContainer = document.querySelector(".claim-detail-info");
+
+            if (!detailsContainer) {
+                console.error("Erreur : le conteneur des détails de réclamation est introuvable.");
+                return;
+            }
+
+            fetch("../../traitement/reclamationService.php?reclamationId=" + reclamationId)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Erreur réseau");
+                    }
+                    return response.text();
+                })
+                .then(data => {
+                    detailsContainer.innerHTML = data;
+                })
+                .catch(error => console.error("Erreur :", error));
+        }
+    });
+});
+
+
+document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("click", function (event) {
+if (event.target.closest(".action-process")) { 
+    let button = event.target.closest(".action-process");
+    let reclamationId = button.getAttribute("data-id").replace("REF-", "");
+
+    // Mettre à jour le champ hidden du formulaire avec l'ID de la réclamation
+    document.getElementById("reclamation_id").value = reclamationId;
+
+    let detailsContainer = document.querySelector(".claim-detail-info");
+
+    if (!detailsContainer) {
+        console.error("Erreur : le conteneur des détails de réclamation est introuvable.");
+        return;
+    }
+
+    // Charger les détails de la réclamation
+    fetch("../../traitement/reclamationService.php?reclamationId=" + reclamationId)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Erreur réseau");
+            }
+            return response.text();
+        })
+        .then(data => {
+            detailsContainer.innerHTML = data;
+            document.getElementById("process-claim-modal").classList.remove("hidden"); // Afficher le modal
+        })
+        .catch(error => console.error("Erreur :", error));
+}
+});
+
+// Fermer le modal quand on clique sur le bouton de fermeture
+document.querySelector(".close").addEventListener("click", function () {
+document.getElementById("process-claim-modal").classList.add("hidden");
+});
+});
 
 

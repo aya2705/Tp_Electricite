@@ -1,8 +1,9 @@
 <?php
 require_once '../DB/ReclamationDAO.php';
+require_once '../Models/Reclamation.php';
+require_once '../Models/PiecesJointes.php';
 session_start();
 
-// Si l'action est l'ajout de réclamation
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['action']) && $_POST['action'] === 'add') {
     try {
         $client_id = $_SESSION['client_id'] ?? 1;
@@ -10,23 +11,42 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['action']) && $_POST['
         $description = htmlspecialchars($_POST['description']);
         $statut = 'en_attente';
 
-        // Ajouter la réclamation et récupérer son ID
-        $reclamation_id = ReclamationDAO::addReclamation($client_id, $type, $description, $statut);
+        // Créer un objet Reclamation sans ID ni dates
+        $reclamation = new Reclamation(null, $client_id, $type, $description, $statut);
+
+        // Ajouter la réclamation et récupérer l'ID inséré
+        $reclamation_id = ReclamationDAO::addReclamation(
+            $reclamation->getClientId(),
+            $reclamation->getType(),
+            $reclamation->getDescription(),
+            $reclamation->getStatut()
+        );
 
         if ($reclamation_id) {
-            $_SESSION['reclamation_id'] = $reclamation_id; // Stocker en session
+            $_SESSION['reclamation_id'] = $reclamation_id;
 
             // Gérer les pièces jointes
             if (!empty($_FILES['attachments']['name'][0])) {
                 $uploadDir = '../uploads/claims/';
+                if (!is_dir($uploadDir)) {
+                    mkdir($uploadDir, 0777, true);
+                }
 
                 foreach ($_FILES['attachments']['tmp_name'] as $key => $tmpName) {
-                    $fileName = time() . "_" . basename($_FILES['attachments']['name'][$key]);
+                    $originalName = basename($_FILES['attachments']['name'][$key]);
+                    $fileName = time() . "_" . $originalName;
                     $targetFilePath = $uploadDir . $fileName;
 
                     if (move_uploaded_file($tmpName, $targetFilePath)) {
-                        // Ajouter chaque fichier à la base de données
-                        ReclamationDAO::addPieceJointe($reclamation_id, $fileName, $_FILES['attachments']['type'][$key]);
+                        // Créer un objet PiecesJointes
+                        $pieceJointe = new PiecesJointes(
+                            null,
+                            $reclamation_id,
+                            $fileName,
+                            $_FILES['attachments']['type'][$key]
+                        );
+
+                        ReclamationDAO::addPieceJointe($pieceJointe);
                     }
                 }
             }
@@ -36,10 +56,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['action']) && $_POST['
         } else {
             throw new Exception("Erreur lors de l'ajout de la réclamation.");
         }
+
     } catch (Exception $e) {
         echo "Erreur : " . $e->getMessage();
     }
 }
+
 
 // Si la méthode est POST et l'action est "respond"
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["action"]) && $_POST["action"] === "respond") {
@@ -51,7 +73,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["action"]) && $_POST["
         die("Erreur: ID de réclamation ou texte de réponse invalide.");
     }
 
-    if (!ReclamationDAO::traiterReponse($reclamation_id, $response_text, $claim_status)) {
+    // Création des objets nécessaires
+    $notification = new notification($reclamation_id, $response_text, $claim_status);
+    $reclamation = new Reclamation($reclamation_id, null, null, null, $claim_status);
+
+    // Traitement via DAO
+    if (!reclamationDAO::traiterReponse($notification, $reclamation)) {
         error_log("Échec du traitement de la réclamation ID: $reclamation_id, Statut: $claim_status, Réponse: $response_text");
         die("Erreur lors du traitement de la réclamation.");
     } else {
@@ -139,4 +166,5 @@ if ($_SERVER["REQUEST_METHOD"] === "GET") {
     // Stocker les réclamations dans la session pour les utiliser dans la page d'affichage
     $_SESSION['reclamations'] = $reclamations;
 }
+
 ?>

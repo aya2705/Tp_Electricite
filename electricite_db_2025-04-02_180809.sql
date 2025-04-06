@@ -135,3 +135,6 @@ INSERT INTO `compteurs` (`compteur_id`, `client_id`, `numero_serie`) VALUES
 
 INSERT INTO `consommations_mensuelles` (`consommation_id`, `client_id`, `compteur_id`, `kw`, `image_path`, `created_at`) VALUES 
 (7, 1, 1, 1600.00, '../../uploads/meters/meter_1.jpg', '2025-03-01 10:00:00');
+
+-- 
+rename table `reponses` to `notifications`;
