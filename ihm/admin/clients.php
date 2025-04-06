@@ -33,7 +33,7 @@ $messages = [
     <link rel="stylesheet" href="../../assets/css/main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        /* ...existing styles généraux... */
+
         .filters {
             display: flex;
             align-items: center;
@@ -191,9 +191,6 @@ $messages = [
                 </a>
                 <a href="claims-frs.php">
                     <i class="fas fa-exclamation-circle"></i> Réclamations
-                </a>
-                <a href="settings.php">
-                    <i class="fas fa-cog"></i> Paramètres
                 </a>
                 <a href="../deconnexion.php" class="logout">
                     <i class="fas fa-sign-out-alt"></i> Déconnexion

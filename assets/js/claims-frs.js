@@ -7,14 +7,17 @@ document.addEventListener('DOMContentLoaded', function() {
      
      // Traitement des réclamations
      if (processButtons) {
-         processButtons.forEach(btn => {
-             btn.addEventListener('click', function() {
-                 const claimId = this.getAttribute('data-id');
-                 document.getElementById('claim-ref').textContent = `#${claimId}`;
-                 openModal('process-claim-modal');
-             });
-         });
-     }
+        processButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const claimId = this.getAttribute('data-id');
+                const claimRefEl = document.getElementById('claim-ref');
+                if (claimRefEl) {
+                    claimRefEl.textContent = `#${claimId}`;
+                }
+                openModal('process-claim-modal');
+            });
+        });
+    }
      
    
  });

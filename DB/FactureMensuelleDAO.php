@@ -3,7 +3,7 @@ require_once __DIR__ . '/connexion.php';
 require_once __DIR__ . '/../models/FactureMensuelle.php';
 
 class FactureMensuelleDAO {
-    private PDO $db;
+    private $db;
 
     public function __construct() {
         try {
@@ -75,7 +75,7 @@ class FactureMensuelleDAO {
             :consommation_id,
             :montant,
             :client_name,
-            :consommation,
+            :consommationKw,
             NOW())"
     );
         
@@ -84,7 +84,7 @@ class FactureMensuelleDAO {
             'consommation_id' => $factureMensuelle->getConsommationId(),
             'montant' => $factureMensuelle->getMontant(),
             'client_name' => $factureMensuelle->getClientName(),
-            'consommation' => $factureMensuelle->getConsommation()
+            'consommationKw' => $factureMensuelle->getConsommationKw()
         ]);
 
         return $this->db->lastInsertId();

@@ -1,25 +1,37 @@
 <?php
 include_once __DIR__ . "/../DB/FactureMensuelleDAO.php";
 include_once __DIR__ . "/../models/FactureMensuelle.php";
+include_once __DIR__ . "/../DB/ConsommationDAO.php";
 
-
-class FactureMensuelleService {
+class FactureMensuelleService
+{
     private $factureMensuelleRepository;
+    private $consommationRepository;
 
-    public function __construct() {
+    public function __construct()
+    {
         // used to submit a new facture
         $this->factureMensuelleRepository = new FactureMensuelleDAO();
+        $this->consommationRepository = new ConsommationDAO();
 
     }
 
-    public function submitFactureMensuelle($clientId, $clientName, $consommation) {
-        // now we should calculate montant
-        $montant = $this->calculateMontant($consommation->getkw());
-        $factureMensuelle = new FactureMensuelle($clientId, $clientName, $consommation, $montant);
+    // Ajout d'un paramètre optionnel pour la consommation précédente
+    public function submitFactureMensuelle($clientId, $clientName, $currentConsommation, $previousConsommation = null)
+    {
+        $previousKw = ($previousConsommation !== null) ? $previousConsommation->getKw() : 0;
+        $currentKw = $currentConsommation->getKw();
+        $consommationKw = $currentKw - $previousKw;
+
+        // Calculer le montant basé sur la consommation réelle
+        $montant = $this->calculateMontant($consommationKw);
+
+        $factureMensuelle = new FactureMensuelle($clientId, $clientName, $currentConsommation, $consommationKw, $montant);
         $this->factureMensuelleRepository->submitNewFactureMensuelle($factureMensuelle);
     }
 
-    public function calculateMontant($kw) {
+    public function calculateMontant($kw)
+    {
         // Initialize variables
         $montantHT = 0;
 
@@ -42,17 +54,20 @@ class FactureMensuelleService {
         return round($montantTTC, 2);
     }
 
-    public function getLastFactureMensuelleByClient($clientId) {
-       $lastFacture = $this->factureMensuelleRepository->getLastFactureByClientId($clientId);
-       return $lastFacture;
+    public function getLastFactureMensuelleByClient($clientId)
+    {
+        $lastFacture = $this->factureMensuelleRepository->getLastFactureByClientId($clientId);
+        return $lastFacture;
     }
 
-    public function getAllFacturesByClient($clientId) {
+    public function getAllFacturesByClient($clientId)
+    {
         $Factures = $this->factureMensuelleRepository->getFacturesMensuellesByClientId($clientId);
-       return $Factures;
+        return $Factures;
     }
 
-    public function getAllFacturesMensuelles() {
+    public function getAllFacturesMensuelles()
+    {
         $factures = $this->factureMensuelleRepository->getAllFacturesMensuelles();
         return $factures;
     }

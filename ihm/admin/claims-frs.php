@@ -39,9 +39,6 @@ $reclamationId = $_SESSION['reclamation_id'] ?? null;
                 <a href="claims-frs.php" class="active">
                     <i class="fas fa-exclamation-circle" class="active"></i> Réclamations
                 </a>
-                <a href="settings.php">
-                    <i class="fas fa-cog"></i> Paramètres
-                </a>
                 <a href="../deconnexion.php" class="logout">
                     <i class="fas fa-sign-out-alt"></i> Déconnexion
                 </a>
@@ -123,13 +120,7 @@ $reclamationId = $_SESSION['reclamation_id'] ?? null;
                     </div>
                 <?php endforeach; ?>
             </div>
-
-            <div class="pagination">
-                <a href="#" class="active">1</a>
-                <a href="#">2</a>
-                <a href="#">3</a>
-                <a href="#">&raquo;</a>
-            </div>
+            
         </div>
     </div>
 
@@ -184,10 +175,10 @@ $reclamationId = $_SESSION['reclamation_id'] ?? null;
                                     <label class="radio-inline">
                                         <input type="radio" name="claim_status" value="en_traitement" checked> En traitement
                                     </label>
-                                    <label class="radio-inline" style="margin-left: 15px;">
+                                    <label class="radio-inline">
                                         <input type="radio" name="claim_status" value="résolue"> Résolue
                                     </label>
-                                    <label class="radio-inline" style="margin-left: 15px;">
+                                    <label class="radio-inline">
                                         <input type="radio" name="claim_status" value="refusée"> Refusée
                                     </label>
 

@@ -241,8 +241,7 @@ $imagePath = $lastConsumption ? $lastConsumption->getImagePath() : '';
         </div>
     </div>
     
-    <script src="assets/js/main.js"></script>
-    <script src="js/consumption.js"></script>
+    <script src="../../assets/js/main.js"></script>
     
 </body>
 

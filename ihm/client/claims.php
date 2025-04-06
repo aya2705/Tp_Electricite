@@ -31,7 +31,7 @@ if (isset($_SESSION['reclamations']) && is_array($_SESSION['reclamations'])) {
             </div>
             <div class="sidebar-menu">
                 <a href="dashboard.php"><i class="fas fa-tachometer-alt"></i> Tableau de bord</a>
-                <a href="consumption.php"><i class="fas fa-bolt"></i> Saisie Consommation</a>
+                <a href="consommations.php"><i class="fas fa-bolt"></i> Saisie Consommation</a>
                 <a href="claims.php" class="active"><i class="fas fa-exclamation-circle"></i> Réclamations</a>
                 <a href="profile.php"><i class="fas fa-user"></i> Mon Profil</a>
                 <a href="../deconnexion.php" class="logout"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>

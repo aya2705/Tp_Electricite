@@ -7,7 +7,7 @@ if (!isset($_SESSION['user_id'])) {
 
 include_once "../DB/FactureMensuelleDAO.php";
 include_once "../DB/consommationDAO.php";
-require_once "../vendor/autoload.php"; // Ensure TCPDF is autoloaded
+require_once __DIR__ . '/../vendor/autoload.php'; // Charge l'autoloader
 
 if (!isset($_GET['id'])) {
     die("ID de facture manquant");

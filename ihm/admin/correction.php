@@ -6,28 +6,34 @@ $consommationService = new ConsommationService();
 $consumptionDate = 'null';
 $consumptionValue = 0;
 $imagePath = 'null';
+$clientId = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-
     try {
+        $anomalyId = $_GET['id'];
         $kw = filter_input(INPUT_POST, 'current-value', FILTER_VALIDATE_FLOAT);
-        $consommationService->treatMonthlyConsumptionWithAnomaly($_GET['id'], $kw);
+        // Récupérer l'ID client à partir du champ caché du formulaire
+        $clientId = filter_input(INPUT_POST, 'client_id', FILTER_SANITIZE_STRING);
+        if (empty($clientId)) {
+            throw new Exception("ID client manquant");
+        }
+        $consommationService->treatMonthlyConsumptionWithAnomaly($clientId, $anomalyId, $kw);
         header('Location: factures.php');
-
     } catch (Exception $e) {
         $message = 'Erreur: ' . $e->getMessage();
         $messageType = 'error';
     }
-
 } else {
-$anomalyId = $_GET['id'];
-$consumptionToCorrect = $consommationService->getConsumptionByAnomalyId($anomalyId);
-$consumptionDate = !empty($consumptionToCorrect) ? date('F Y', strtotime($consumptionToCorrect->getCreatedAt())) : 'N/A';
-$consumptionValue = !empty($consumptionToCorrect) ? $consumptionToCorrect->getKw() : 0;
-$imagePath = $consumptionToCorrect ? $consumptionToCorrect->getImagePath() : '';
+    $anomalyId = $_GET['id'];
+    $consumptionToCorrect = $consommationService->getConsumptionByAnomalyId($anomalyId);
+    // Récupérer l'ID client depuis les détails de l'anomalie
+    $anomalyDetails = $consommationService->getAnomalyDetails($anomalyId);
+    $clientId = $anomalyDetails['client_id'] ?? null;
+    
+    $consumptionDate = !empty($consumptionToCorrect) ? date('F Y', strtotime($consumptionToCorrect->getCreatedAt())) : 'N/A';
+    $consumptionValue = !empty($consumptionToCorrect) ? $consumptionToCorrect->getKw() : 0;
+    $imagePath = $consumptionToCorrect ? $consumptionToCorrect->getImagePath() : '';
 }
-
-
 ?>
 
 <!DOCTYPE html>
@@ -147,9 +153,6 @@ $imagePath = $consumptionToCorrect ? $consumptionToCorrect->getImagePath() : '';
                 <a href="claims-frs.php">
                     <i class="fas fa-exclamation-circle"></i> Réclamations
                 </a>
-                <a href="settings.php">
-                    <i class="fas fa-cog"></i> Paramètres
-                </a>
                 <a href="../deconnexion.php" class="logout">
                     <i class="fas fa-sign-out-alt"></i> Déconnexion
                 </a>
@@ -180,10 +183,12 @@ $imagePath = $consumptionToCorrect ? $consumptionToCorrect->getImagePath() : '';
                         </div>
                     </div>
 
-                    <form id="consumption-form" method="POST" action="correction.php?id=<?php echo $anomalyId  ?>" enctype="multipart/form-data">
+                    <form id="consumption-form" method="POST" action="correction.php?id=<?php echo $anomalyId ?>" enctype="multipart/form-data">
                         <div class="form-group">
                             <label for="current-value">Valeur correcte (kWh)</label>
                             <input type="number" name="current-value" id="current-value" required>
+                            <!-- Champ caché pour l'ID client -->
+                            <input type="hidden" name="client_id" value="<?php echo htmlspecialchars($clientId); ?>">
                         </div>
                         <div class="form-actions text-center mt-3">
                             <button type="submit" class="btn btn-primary">
@@ -208,8 +213,7 @@ $imagePath = $consumptionToCorrect ? $consumptionToCorrect->getImagePath() : '';
             </div>
         </div>
     </div>
-    <script src="assets/js/main.js"></script>
-    <script src="js/consumption.js"></script>
+    <script src="../../assets/js/main.js"></script>
 </body>
 
 </html>

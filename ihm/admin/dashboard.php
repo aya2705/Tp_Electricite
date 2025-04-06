@@ -14,7 +14,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'fournisseur') {
     <title>Tableau de Bord - Gestion des Factures</title>
     <link rel="stylesheet" href="../../assets/css/main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <style>
         .dashboard-stats {
             display: grid;
@@ -206,9 +206,6 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'fournisseur') {
                 </a>
                 <a href="claims-frs.php">
                     <i class="fas fa-exclamation-circle"></i> Réclamations
-                </a>
-                <a href="settings.php">
-                    <i class="fas fa-cog"></i> Paramètres
                 </a>
                 <a href="../deconnexion.php" class="logout">
                     <i class="fas fa-sign-out-alt"></i> Déconnexion

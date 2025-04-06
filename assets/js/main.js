@@ -17,6 +17,18 @@ function closeModal(modalId) {
     }
 }
 
+// Ouvrir un modal photo
+function openPhotoModal(imageSrc) {
+    const modal = document.getElementById("photo-modal");
+    if (modal) {
+        const modalImage = document.getElementById("modal-image");
+        if (modalImage) {
+            modalImage.src = imageSrc;
+        }
+        modal.style.display = 'block';
+    }
+}
+
 // Configuration des modals
 document.addEventListener('DOMContentLoaded', function() {
     // Fermeture des modals avec le bouton X

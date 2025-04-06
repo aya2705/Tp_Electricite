@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../DB/consommationDAO.php';
+include_once __DIR__ . '/../DB/consommationDAO.php';
 require_once __DIR__ . '/../models/consommationMensuelle.php';
 require_once __DIR__ . '/../models/monthlyConsumptionAnomaly.php'; // Include the anomaly model
 require_once __DIR__ . '/../traitement/FactureMensuelleService.php'; // Include the anomaly model
@@ -13,11 +13,13 @@ require_once __DIR__ . '/../traitement/FactureMensuelleService.php'; // Include 
 // if the monthly consumption is really superior or really inferior than the monthly consumption of the last month
 // then this consumption will be flagged as an anomalie
 
-class consommationService {
+class consommationService
+{
     private $consommationRepository;
     private $factureMensuelleService;
     // here we will inject the data access object for consommationService
-    public function __construct() {
+    public function __construct()
+    {
         $this->factureMensuelleService = new FactureMensuelleService();
         $this->consommationRepository = new ConsommationDAO();
     }
@@ -27,8 +29,11 @@ class consommationService {
         return $this->consommationRepository->getLastNormalConsumption($clientId);
     }
 
-    public function submitConsommationMensuelle($clientId, $consommationMensuelle) {
+    public function submitConsommationMensuelle($clientId, $consommationMensuelle)
+    {
+        // Récupérer le dernier relevé avant l'insertion
         $lastNormalConsumption = $this->consommationRepository->getLastNormalConsumption($clientId);
+
         $previousKw = $lastNormalConsumption ? $lastNormalConsumption->getKw() : 0;
         $currentKw = $consommationMensuelle->getKw();
         $isAnomaly = $this->checkForMonthlyConsumptionAnomaly($clientId, $currentKw);
@@ -61,7 +66,8 @@ class consommationService {
             return ['status' => 'anomaly', 'consumption' => $persistedConsumption];
 
         } else {
-            $this->factureMensuelleService->submitFactureMensuelle($clientId, $clientName, $persistedConsumption );
+            // Passer le dernier relevé obtenu AVANT l'insertion
+            $this->factureMensuelleService->submitFactureMensuelle($clientId, $clientName, $persistedConsumption, $lastNormalConsumption);
             return ['status' => 'normal', 'consumption' => $persistedConsumption];
         }
     }
@@ -73,17 +79,17 @@ class consommationService {
             return false; // No previous consumption to compare with
         }
         $previousKw = $lastNormalConsumption->getKw();
-        return $kw >= $previousKw * 10 || $kw <= $previousKw * 0.1;
+        return $kw >= $previousKw * 10 || $kw < $previousKw;
     }
 
     public function getAllMonthlyConsumptionsWithAnomaly()
     {
         $anomaliesData = $this->consommationRepository->getAllAnomalies();
         $anomalies = [];
-        
+
         foreach ($anomaliesData as $data) {
             $anomaly = new MonthlyConsumptionAnomaly();
-            
+
             $anomaly->setAnomalyId($data['anomalie_id'] ?? null);
             $anomaly->setClientName($data['client_name'] ?? 'Inconnu');
             $anomaly->setMeterId($data['compteur_id'] ?? 'N/A');
@@ -93,22 +99,44 @@ class consommationService {
             $anomaly->setDifference($data['difference'] ?? 0);
             $anomaly->setStatus($data['status'] ?? 'En attente');
             $anomaly->setClientId(null); // Not provided by DAO
-            
+
             $anomalies[] = $anomaly;
         }
-        
+
         return $anomalies;
     }
 
     // this should return a consumption related to an anomaly
-    public function getConsumptionByAnomalyId($anomalieId) {
+    public function getConsumptionByAnomalyId($anomalieId)
+    {
         return $this->consommationRepository->getConsumptionByAnomalyId($anomalieId);
     }
+
+    // Ajout de la méthode pour récupérer les détails d'une anomalie
+    public function getAnomalyDetails($anomalyId) {
+        return $this->consommationRepository->getAnomalyDetails($anomalyId);
+    }
+
     // as a Fournisseur after viewing the anomaly i need to correct it by updating the consumption and generating the facture
-    public function treatMonthlyConsumptionWithAnomaly($anomalyId, $correctedKW){
-        // this should locate the consumption via anomaly Id , then correct consumption , then delete its reference in the anomaly table
-        // then return necessary info in order to generate a facture for that corrected consumption, in the for of an array.
+    public function treatMonthlyConsumptionWithAnomaly($clientId, $anomalyId, $correctedKW)
+    {
+        // Récupérer le dernier relevé normal pour ce client
+        $lastNormalConsumption = $this->consommationRepository->getLastNormalConsumption($clientId);
+
+        // Corrige la consommation et supprime l'anomalie
         $data = $this->consommationRepository->correctConsumptionAndDeleteAnomaly($anomalyId, $correctedKW);
-        $this->factureMensuelleService->submitFactureMensuelle($data['clientId'], $data['clientName'], $data['persistedConsumption'] );
+
+        // Si le relevé précédent est identique au relevé corrigé, le laisser à null
+        if ($lastNormalConsumption && $lastNormalConsumption->getId() === $data['persistedConsumption']->getId()) {
+            $lastNormalConsumption = null;
+        }
+
+        // Générer la facture en passant la consommation corrigée et, le cas échéant, la consommation précédente
+        $this->factureMensuelleService->submitFactureMensuelle(
+            $data['clientId'],
+            $data['clientName'],
+            $data['persistedConsumption'],
+            $lastNormalConsumption
+        );
     }
 }
