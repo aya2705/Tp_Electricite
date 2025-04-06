@@ -122,6 +122,13 @@ CREATE TABLE `factures_mensuelle` (
   CONSTRAINT `factures_mensuelle_ibfk_2` FOREIGN KEY (`consommation_id`) REFERENCES `consommations_mensuelles` (`consommation_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+
+rename table `reponses` to `reclamations_reponses`;
+alter table `reclamations_reponses` add column  `is_read` tinyint(1) DEFAULT 0;
+
+
+
+
 INSERT INTO `users` (`user_id`, `email`, `password_hash`, `role`, `created_at`) VALUES 
 (3, 'kihl@mail.com', '$2y$10$Tg0br9R43vKoTpkEU82pv.4IdimHVqgGXtUGXQvZP8AVYMN7M7vH6', 'fournisseur', '2025-03-31 21:52:44'),
 (4, 'youns@mail.com', '$2y$10$a5bQeRcigLAMYfKkiUgC1.kDy8EZzynEpYDgalEA/9I.1/2K9XZOy', 'client', '2025-04-01 16:18:51');

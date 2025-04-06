@@ -1,5 +1,9 @@
 <?php
+
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
 session_start();
+
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'client') {
     header('Location: ../connexion.php');
     exit;
@@ -7,6 +11,8 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'client') {
 
 require_once '../../traitement/consommationService.php';
 require_once '../../traitement/FactureMensuelleService.php';
+require_once '../../DB/notificationDAO.php';
+require_once '../../DB/connexion.php';
 
 $clientId = $_SESSION['client_id'];
 
@@ -24,6 +30,11 @@ $consumptionDate = !empty($lastConsumption) ? date('F Y', strtotime($lastConsump
 $consumptionValue = !empty($lastConsumption) ? $lastConsumption->getKw() : 0;
 $lastFactureMontant = !empty($lastFacture) ? number_format($lastFacture['montant'], 2) : '0.00';
 $lastFacturePeriode = !empty($lastFacture) ? date('F Y', strtotime($lastFacture['date_emission'])) : 'N/A';
+
+
+// Utiliser la classe NotificationDAO
+$notificationDAO = new NotificationDAO();
+$notifications = $notificationDAO->getUnreadNotifications($clientId);
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -33,6 +44,8 @@ $lastFacturePeriode = !empty($lastFacture) ? date('F Y', strtotime($lastFacture[
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tableau de Bord Client - Gestion des Factures</title>
     <link rel="stylesheet" href="../../assets/css/main.css">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         .dashboard-stats {
@@ -117,6 +130,69 @@ $lastFacturePeriode = !empty($lastFacture) ? date('F Y', strtotime($lastFacture[
             display: block;
             margin-top: 5px;
         }
+
+
+
+        /* notif */
+
+        .card h2 {
+            font-size: 30px;
+            font-weight: 600;
+        }
+
+        .card .contenu-notif {
+            font-size: 15px;
+            color: #155724;
+            font-weight: 900;
+        }
+
+        .card .date-notif {
+            font-size: 12px;
+            color: #6c757d;
+            font-weight: 900;
+            margin-top: 5px;
+            margin-right: 90px;
+        }
+
+        .card .status-notif {
+            font-size: 12px;
+            color: #6c757d;
+            font-weight: 900;
+            margin-top: 5px;
+        }
+
+        .card .supp-btn {
+            background-color:rgb(230, 178, 184);
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .table {
+            margin-bottom: 0;
+        }
+
+        .table thead th {
+            border-top: none;
+            font-weight: 600;
+            background-color: #f8f9fa;
+        }
+
+        .table td {
+            vertical-align: middle;
+            padding: 1rem;
+        }
+
+        .table-hover tbody tr:hover {
+            background-color: rgba(0, 123, 255, 0.05);
+        }
+
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+        }
     </style>
 </head>
 
@@ -196,8 +272,7 @@ $lastFacturePeriode = !empty($lastFacture) ? date('F Y', strtotime($lastFacture[
                                     <td><?php echo date('d/m/Y', strtotime($facture['date_emission'])); ?></td>
                                     <td class="actions">
                                         <a href="../../traitement/generate_pdf.php?id=<?php echo $facture['facture_id']; ?>"
-                                            class="btn btn-sm btn-info"
-                                            target="_blank">
+                                            class="btn btn-sm btn-info" target="_blank">
                                             <i class="fas fa-download"></i>
                                         </a>
                                     </td>
@@ -212,31 +287,54 @@ $lastFacturePeriode = !empty($lastFacture) ? date('F Y', strtotime($lastFacture[
                 </table>
             </div>
 
+            <!-- Notifications -->
+
             <div class="card">
                 <div class="card-header">
                     <h2>Notifications</h2>
                 </div>
-                <div class="notification-list">
-                    <div class="notification">
-                        <i class="fas fa-bell"></i>
-                        <div class="notification-content">
-                            <h3>Saisie de consommation disponible</h3>
-                            <p>Vous pouvez maintenant saisir votre consommation pour le mois de Novembre 2023.</p>
-                            <span class="notification-date">Aujourd'hui</span>
+
+                <div class="card-body p-0">
+                    <?php if (!empty($notifications)): ?>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                
+                                <tbody>
+                                    <?php foreach ($notifications as $notification): ?>
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex flex-column">
+                                                    <p class="contenu-notif"><?= htmlspecialchars($notification['contenu']) ?>
+                                                    </p>
+                                                    <div class="d-flex justify-content-between">
+                                                        <small
+                                                            class="date-notif"><?= date('d/m/Y H:i', strtotime($notification['date_reponse'])) ?></small>
+                                                        <small class="status-notif">Statut:
+                                                            <?= $notification['status'] ?></small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="align-middle text-center">
+                                            <form method="post" action="../../traitement/notificationService.php" class="d-inline">
+                                                <input type="hidden" name="action" value="delete">
+                                                <input type="hidden" name="notificationId" value="<?= $notification['reponse_id'] ?>">
+                                                <button type="submit" class="supp-btn">Supprimer Notification</button>
+                                            </form>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
                         </div>
-                    </div>
-                    <div class="notification">
-                        <i class="fas fa-check-circle"></i>
-                        <div class="notification-content">
-                            <h3>Réclamation traitée</h3>
-                            <p>Votre réclamation #REF-2023-42 a été traitée. Consultez les détails.</p>
-                            <span class="notification-date">Il y a 2 jours</span>
+                    <?php else: ?>
+                        <div class="text-center py-4">
+                            <p class="text-muted">Aucune nouvelle notification.</p>
                         </div>
-                    </div>
+                    <?php endif; ?>
                 </div>
             </div>
-        </div>
-    </div>
+
+
 </body>
 
 </html>

@@ -127,7 +127,7 @@ class ReclamationDAO {
      */
     public static function enregistrerReponse($reclamation_id, $contenu, $statut) {
         $conn = Database::getInstance()->getConnection();
-        $sql = "INSERT INTO reponses (reclamation_id, contenu, status) 
+        $sql = "INSERT INTO reclamation_notif (reclamation_id, contenu, status) 
                 VALUES (:reclamation_id, :contenu, :status)
                 ON DUPLICATE KEY UPDATE contenu = :contenu, status = :status, date_reponse = CURRENT_TIMESTAMP";
         $stmt = $conn->prepare($sql);
