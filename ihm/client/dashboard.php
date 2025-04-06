@@ -1,9 +1,7 @@
 <?php
-
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 session_start();
-
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'client') {
     header('Location: ../connexion.php');
     exit;
@@ -11,8 +9,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'client') {
 
 require_once '../../traitement/consommationService.php';
 require_once '../../traitement/FactureMensuelleService.php';
-require_once '../../DB/notificationDAO.php';
-require_once '../../DB/connexion.php';
+require_once '../../traitement/notificationService.php';
 
 $clientId = $_SESSION['client_id'];
 
@@ -31,7 +28,6 @@ $consumptionValue = !empty($lastConsumption) ? $lastConsumption->getKw() : 0;
 $lastFactureMontant = !empty($lastFacture) ? number_format($lastFacture['montant'], 2) : '0.00';
 $lastFacturePeriode = !empty($lastFacture) ? date('F Y', strtotime($lastFacture['date_emission'])) : 'N/A';
 
-
 // Utiliser la classe NotificationDAO
 $notificationDAO = new NotificationDAO();
 $notifications = $notificationDAO->getUnreadNotifications($clientId);
@@ -44,8 +40,6 @@ $notifications = $notificationDAO->getUnreadNotifications($clientId);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tableau de Bord Client - Gestion des Factures</title>
     <link rel="stylesheet" href="../../assets/css/main.css">
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         .dashboard-stats {
@@ -131,9 +125,7 @@ $notifications = $notificationDAO->getUnreadNotifications($clientId);
             margin-top: 5px;
         }
 
-
-
-        /* notif */
+        /* Notif */
 
         .card h2 {
             font-size: 30px;
@@ -272,7 +264,8 @@ $notifications = $notificationDAO->getUnreadNotifications($clientId);
                                     <td><?php echo date('d/m/Y', strtotime($facture['date_emission'])); ?></td>
                                     <td class="actions">
                                         <a href="../../traitement/generate_pdf.php?id=<?php echo $facture['facture_id']; ?>"
-                                            class="btn btn-sm btn-info" target="_blank">
+                                            class="btn btn-sm btn-info"
+                                            target="_blank">
                                             <i class="fas fa-download"></i>
                                         </a>
                                     </td>
@@ -286,8 +279,6 @@ $notifications = $notificationDAO->getUnreadNotifications($clientId);
                     </tbody>
                 </table>
             </div>
-
-            <!-- Notifications -->
 
             <div class="card">
                 <div class="card-header">
@@ -334,7 +325,9 @@ $notifications = $notificationDAO->getUnreadNotifications($clientId);
                 </div>
             </div>
 
-
+            
+        </div>
+    </div>
 </body>
 
 </html>

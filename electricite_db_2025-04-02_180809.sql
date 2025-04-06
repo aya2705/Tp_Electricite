@@ -124,7 +124,6 @@ CREATE TABLE `factures_mensuelle` (
 
 
 rename table `reponses` to `reclamations_reponses`;
-alter table `reclamations_reponses` add column  `is_read` tinyint(1) DEFAULT 0;
 
 
 

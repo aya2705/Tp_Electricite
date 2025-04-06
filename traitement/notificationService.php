@@ -1,8 +1,9 @@
 <?php
-require_once "../DB/connexion.php";
-require_once "../DB/notificationDAO.php";
+require_once __DIR__ . '/../DB/connexion.php';
+require_once  __DIR__ . "/../DB/notificationDAO.php";
 
 $notificationDAO = new NotificationDAO($db);
+
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if (isset($_POST['action']) && $_POST['action'] === 'delete' && isset($_POST['notificationId'])) {
