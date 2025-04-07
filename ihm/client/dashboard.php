@@ -45,12 +45,50 @@ $formattedAvg = number_format($avgMontant, 2) . " MAD";
     <link rel="stylesheet" href="../../assets/css/main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-    .dashboard-stats {
+        .dashboard-stats {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 20px;
             margin-bottom: 30px;
-        }  
+        }
+
+        .notification-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .notification-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+
+        /* Ajustement des icônes */
+        .notification-item i {
+            font-size: 24px;
+            color: var(--secondary-color);
+            margin-right: 15px;
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-content p {
+            margin: 0;
+            font-size: 14px;
+        }
+
+        .notification-content small {
+            font-size: 12px;
+            color: #888;
+        }
     </style>
 </head>
 
@@ -130,8 +168,7 @@ $formattedAvg = number_format($avgMontant, 2) . " MAD";
                                     <td><?php echo date('d/m/Y', strtotime($facture['date_emission'])); ?></td>
                                     <td class="actions">
                                         <a href="../../traitement/generate_pdf.php?id=<?php echo $facture['facture_id']; ?>"
-                                            class="btn btn-sm btn-info"
-                                            target="_blank">
+                                            class="btn btn-sm btn-info" target="_blank">
                                             <i class="fas fa-download"></i>
                                         </a>
                                     </td>
@@ -150,38 +187,39 @@ $formattedAvg = number_format($avgMontant, 2) . " MAD";
                 <div class="card-header">
                     <h2>Notifications</h2>
                 </div>
-                <div class="card-body p-0">
+                <div class="card-body">
                     <?php if (!empty($notifications)): ?>
-                        <div id="notifications-container" class="table-responsive">
-                            <table class="table table-hover">
-                                <tbody>
-                                    <?php foreach ($notifications as $notification): ?>
-                                        <tr>
-                                            <td>
-                                                <div class="d-flex flex-column">
-                                                    <p class="contenu-notif"><?= htmlspecialchars($notification['content']) ?></p>
-                                                    <div class="d-flex justify-content-between">
-                                                        <small class="date-notif"><?= date('d/m/Y H:i', strtotime($notification['created_at'])) ?></small>
-                                                        <small class="status-notif">Statut: <?= $notification['status'] ?></small>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td class="align-middle text-center">
-                                                <form method="post" action="../../traitement/notificationService.php">
-                                                    <input type="hidden" name="action" value="delete">
-                                                    <input type="hidden" name="notificationId" value="<?= $notification['notification_id'] ?>">
-                                                    <button type="submit" class="supp-btn"><i class="fa-solid fa-trash"></i></button>
-                                                </form>
-                                            </td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                </tbody>
-                            </table>
-                        </div>
+                        <ul class="notification-list">
+                            <?php foreach ($notifications as $notification):
+                                // Définir l'icône en fonction du type de notification
+                                switch ($notification['type']) {
+                                    case 'facture':
+                                        $icon = "fas fa-file-invoice-dollar";
+                                        break;
+                                    case 'saisie_consommation':
+                                        $icon = "fas fa-bolt";
+                                        break;
+                                    case 'reclamation':
+                                        $icon = "fas fa-exclamation-circle";
+                                        break;
+                                    default:
+                                        $icon = "fas fa-info-circle";
+                                        break;
+                                }
+                                ?>
+                                <li class="notification-item">
+                                    <i class="<?= $icon ?>"></i>
+                                    <div class="notification-content">
+                                        <p><strong><?= ucfirst(htmlspecialchars($notification['type'])) ?>:</strong>
+                                            <?= htmlspecialchars($notification['content']) ?></p>
+                                        <small><em>Reçu le
+                                                <?= date('d/m/Y H:i', strtotime($notification['created_at'])) ?></em></small>
+                                    </div>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
                     <?php else: ?>
-                        <div class="text-center py-4">
-                            <p class="text-muted">Aucune nouvelle notification.</p>
-                        </div>
+                        <p>Aucune notification pour le moment.</p>
                     <?php endif; ?>
                 </div>
             </div>

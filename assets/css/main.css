@@ -989,6 +989,28 @@ input:checked+.toggle-slider:before {
     margin-top: 5px;
 }
 
+/* Notification list styles */
+.notification-list {
+    list-style: none;
+    padding: 0;
+}
+
+.notification-item {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+.notification-item:last-child {
+    border-bottom: none;
+}
+
+.notification-item p {
+    margin: 5px 0;
+}
+
+.notification-item small {
+    color: #666;
+}
 
  /* Notif */
 

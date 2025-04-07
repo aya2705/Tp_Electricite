@@ -10,6 +10,7 @@ class consommationService
     private $consommationRepository;
     private $factureMensuelleService;
     private $periodeSaisieDAO;
+    private $notificationService;
 
     // here we will inject the data access object for consommationService
     public function __construct()
@@ -17,6 +18,7 @@ class consommationService
         $this->factureMensuelleService = new FactureMensuelleService();
         $this->consommationRepository = new ConsommationDAO();
         $this->periodeSaisieDAO = new PeriodeSaisieDAO();
+        $this->notificationService = new NotificationService();
     }
 
     /**
@@ -79,11 +81,29 @@ class consommationService
                 $difference,
                 $imagePath
             );
+
+            // Ajouter une notification pour la saisie de consommation en cas d'anomalie
+            $this->notificationService->addNotification(
+                $clientId,
+                'saisie_consommation',
+                null,
+                'Votre consommation a été enregistrée, mais une anomalie a été détectée. Un traitement est en cours.'
+            );
+
             return ['status' => 'anomaly', 'consumption' => $persistedConsumption];
 
         } else {
             // Passer le dernier relevé obtenu AVANT l'insertion
             $this->factureMensuelleService->submitFactureMensuelle($clientId, $clientName, $persistedConsumption, $lastNormalConsumption);
+
+            // Ajouter une notification pour la saisie de consommation
+            $this->notificationService->addNotification(
+                $clientId,
+                'saisie_consommation',
+                null,
+                'Votre consommation a été enregistrée avec succès.'
+            );
+
             return ['status' => 'normal', 'consumption' => $persistedConsumption];
         }
     }

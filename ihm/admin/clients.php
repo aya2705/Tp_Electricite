@@ -33,7 +33,6 @@ $messages = [
     <link rel="stylesheet" href="../../assets/css/main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-
         .filters {
             display: flex;
             align-items: center;
@@ -181,7 +180,7 @@ $messages = [
                     <i class="fas fa-tachometer-alt"></i> Tableau de bord
                 </a>
                 <a href="clients.php" class="active">
-                    <i class="fas fa-users" ></i> Gestion des clients
+                    <i class="fas fa-users"></i> Gestion des clients
                 </a>
                 <a href="factures.php">
                     <i class="fas fa-file-invoice"></i> Gestion des factures
@@ -192,7 +191,7 @@ $messages = [
                 <a href="claims-frs.php">
                     <i class="fas fa-exclamation-circle"></i> Réclamations
                 </a>
-                <a href="settings.php" >
+                <a href="settings.php">
                     <i class="fas fa-cog"></i> Paramètres
                 </a>
                 <a href="../deconnexion.php" class="logout">
@@ -240,31 +239,34 @@ $messages = [
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($clients as $client):
-                        $compteurs = $compteurDAO->getCompteursByClientId($client->getClientId());
+                                        <?php foreach ($clients as $client):
+                        // Récupération des compteurs pour le client
+                        $compteurs = $compteurDAO->getCompteursByClientId($client['client_id']);
                         $numeroSeries = array_map(function ($compteur) {
+                            // Utilisation de la méthode getNumeroSerie() pour accéder à la donnée
                             return htmlspecialchars($compteur->getNumeroSerie());
                         }, $compteurs);
                         $compteurDisplay = !empty($numeroSeries) ? implode(', ', $numeroSeries) : 'Aucun';
-                        ?>
+                    ?>
                         <tr>
-                            <td><?= htmlspecialchars($client->getClientId()) ?></td>
-                            <td><?= htmlspecialchars($client->getFullName()) ?></td>
-                            <td><?= htmlspecialchars($client->getAddress()) ?></td>
-                            <td><?= htmlspecialchars($client->getPhone()) ?></td>
+                            <td><?= htmlspecialchars($client['client_id']) ?></td>
+                            <td><?= htmlspecialchars($client['full_name']) ?></td>
+                            <td><?= htmlspecialchars($client['address']) ?></td>
+                            <td><?= htmlspecialchars($client['phone']) ?></td>
                             <td><?= $compteurDisplay ?></td>
                             <td class="client-actions">
                                 <a class="btn edit open-edit-modal"
-                                    data-client-id="<?= htmlspecialchars($client->getClientId()) ?>"
-                                    data-full-name="<?= htmlspecialchars($client->getFullName()) ?>"
-                                    data-phone="<?= htmlspecialchars($client->getPhone()) ?>"
-                                    data-address="<?= htmlspecialchars($client->getAddress()) ?>"
-                                    data-compteurs="<?= implode(', ', $numeroSeries) ?>"> <i class="fas fa-edit"></i>
+                                   data-client-id="<?= htmlspecialchars($client['client_id']) ?>"
+                                   data-full-name="<?= htmlspecialchars($client['full_name']) ?>"
+                                   data-phone="<?= htmlspecialchars($client['phone']) ?>"
+                                   data-address="<?= htmlspecialchars($client['address']) ?>"
+                                   data-compteurs="<?= implode(', ', $numeroSeries) ?>">
+                                   <i class="fas fa-edit"></i>
                                 </a>
                                 <a class="btn delete"
-                                    href="../../traitement/ClientService.php?action=delete&client_id=<?= htmlspecialchars($client->getClientId()) ?>"
-                                    onclick="return confirm('Confirmez-vous la suppression de ce client ?');"> <i
-                                        class="fas fa-trash-alt"></i>
+                                   href="../../traitement/ClientService.php?action=delete&client_id=<?= htmlspecialchars($client['client_id']) ?>"
+                                   onclick="return confirm('Confirmez-vous la suppression de ce client ?');">
+                                   <i class="fas fa-trash-alt"></i>
                                 </a>
                             </td>
                         </tr>

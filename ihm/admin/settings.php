@@ -1,6 +1,8 @@
 <?php
 require_once '../../DB/TarificationDAO.php';
 require_once '../../DB/PeriodeSaisieDAO.php';
+require_once '../../DB/ClientDAO.php'; // Ajout
+require_once '../../traitement/notificationService.php'; // Ajout
 
 $tarificationDAO = new TarificationDAO();
 $tarification = $tarificationDAO->getTarification();
@@ -25,7 +27,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $date_fin = $_POST['date_fin'];
         $active = isset($_POST['active']) ? 1 : 0;
 
+        // Mise à jour de la période de saisie
         $periodeSaisieDAO->updatePeriodeSaisie($date_debut, $date_fin, $active);
+
+        // Si la période est activée, notifier tous les clients
+        if ($active) {
+            $clientDAO = new ClientDAO(); // Instanciation
+            $clients = $clientDAO->getAllClients(); // Récupération de tous les clients
+            $notificationService = new NotificationService();
+            foreach ($clients as $client) {
+                $clientId = $client['client_id'];
+                $notificationService->addNotification(
+                    $clientId,
+                    'saisie_consommation',
+                    null,
+                    "La période de saisie de consommation est active du {$date_debut} au {$date_fin},ou vous pouvez saisir votre consommation."
+                );
+            }
+        }
         header("Location: settings.php?periode_success=1");
         exit;
     }

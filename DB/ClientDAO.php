@@ -62,19 +62,7 @@ class ClientDAO
     {
         $stmt = $this->db->prepare("SELECT * FROM clients");
         $stmt->execute();
-        $rows = $stmt->fetchAll();
-        $clients = [];
-        foreach ($rows as $row) {
-            $clients[] = new Client(
-                $row['client_id'],
-                $row['user_id'],
-                $row['full_name'],
-                $row['address'],
-                $row['phone'],
-                $row['created_at']
-            );
-        }
-        return $clients;
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function deleteClient($client_id)

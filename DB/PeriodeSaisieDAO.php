@@ -11,7 +11,6 @@ class PeriodeSaisieDAO {
     public function getPeriodeSaisie() {
         $stmt = $this->db->prepare("
             SELECT * FROM periode_saisie 
-            WHERE active = TRUE 
             ORDER BY id DESC 
             LIMIT 1
         ");

@@ -21,21 +21,20 @@ class NotificationDAO {
     // Ajouter une notification
     public function addNotification($notification) {
         $query = "INSERT INTO notifications (client_id, type, reference, content, status)
-                  VALUES (:client_id, :type, :reference, :content, :status)";
+                  VALUES (:client_id, :type, :reference, :content, 'non_lue')";
         $stmt = $this->pdo->prepare($query);
         $params = [
             ':client_id' => $notification->getClientId(),
             ':type'      => $notification->getType(),
             ':reference' => $notification->getReference(),
-            ':content'   => $notification->getContent(),
-            ':status'    => $notification->getStatus()
+            ':content'   => $notification->getContent()
         ];
         return $stmt->execute($params);
     }
 
     // Marquer une notification comme lue
     public function markAsRead($notificationId) {
-        $query = "UPDATE notifications SET status = 'lue', read_at = NOW() WHERE notification_id = :notification_id";
+        $query = "UPDATE notifications SET status = 'lue' WHERE notification_id = :notification_id";
         $stmt = $this->pdo->prepare($query);
         $stmt->bindParam(':notification_id', $notificationId, PDO::PARAM_INT);
         return $stmt->execute();
