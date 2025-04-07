@@ -1,8 +1,20 @@
 <?php
 session_start();
 require_once '../../traitement/consommationService.php';
+require_once '../../DB/ClientDAO.php'; // Add this line
 $consommationService = new ConsommationService();
 $anomalies = $consommationService->getAllMonthlyConsumptionsWithAnomaly();
+$annualAnomalies = $consommationService->getAnnualConsumptionsWithAnomalies();
+
+// Auto-generate invoices for all annual anomalies
+$invoicesGenerated = $consommationService->generateInvoicesForAnnualAnomalies();
+
+// Get any messages to display
+$successMessage = '';
+if ($invoicesGenerated > 0) {
+    $successMessage = "$invoicesGenerated nouvelles factures annuelles générées";
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -13,6 +25,65 @@ $anomalies = $consommationService->getAllMonthlyConsumptionsWithAnomaly();
     <title>Gestion des Saisies - Gestion des Factures</title>
     <link rel="stylesheet" href="../../assets/css/main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+    .tab-navigation {
+        display: flex;
+        margin-bottom: 20px;
+        gap: 10px;
+    }
+
+    .tab-button {
+        padding: 8px 16px;
+        background-color: #f0f0f0;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .tab-button.active {
+        background-color: var(--primary-color);
+        color: white;
+        border-color: var(--primary-color);
+    }
+
+    .tab-content {
+        display: none;
+    }
+
+    #monthly-anomalies-content {
+        display: block;
+    }
+
+    .badge-warning {
+        background-color: #fff3cd;
+        color: #856404;
+        padding: 5px 10px;
+        border-radius: 4px;
+    }
+
+    .badge-anomaly {
+        background-color: #f8d7da;
+        color: #721c24;
+        padding: 5px 10px;
+        border-radius: 4px;
+    }
+    
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .table th, .table td {
+        padding: 8px;
+        border-bottom: 1px solid #ddd;
+        text-align: left;
+    }
+    
+    .text-center {
+        text-align: center;
+    }
+</style>
 </head>
 
 <body>
@@ -99,79 +170,144 @@ $anomalies = $consommationService->getAllMonthlyConsumptionsWithAnomaly();
 
                 </div>
             </div>
+            
 
-            <div class="card">
-                <div class="card-header">
-                    <h2>Anomalies détectées</h2>
-                </div>
-                <div class="filters">
-                    <div class="search-container">
-                        <i class="fas fa-search"></i>
-                        <input type="text" placeholder="Rechercher un client..." id="search-anomaly">
-                    </div>
-                    <div class="filter-group">
-                        <label for="severity-filter">Sévérité:</label>
-                        <select id="severity-filter">
-                            <option value="">Toutes</option>
-                            <option value="high">Haute (>100 kWh)</option>
-                            <option value="medium">Moyenne (50-100 kWh)</option>
-                            <option value="low">Faible (<50 kWh)</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label for="status-filter">Statut:</label>
-                        <select id="status-filter">
-                            <option value="">Tous</option>
-                            <option value="pending">En attente</option>
-                            <option value="verified">Vérifiée</option>
-                            <option value="resolved">Résolue</option>
-                        </select>
-                    </div>
-                </div>
-
-                <table class="anomalies-table">
-                    <thead>
-                        <tr>
-                            <th>Client</th>
-                            <th>ID Compteur</th>
-                            <th>Date de saisie</th>
-                            <th>Valeur précédente</th>
-                            <th>Valeur saisie</th>
-                            <th>Écart</th>
-                            <th>Statut</th>
-                            <th>Corriger</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if (empty($anomalies)): ?>
-                            <tr>
-                                <td colspan="8" class="text-center">Aucune anomalie détectée</td>
-                            </tr>
-                        <?php else: ?>
-                            <?php foreach ($anomalies as $anomaly): ?>
-                                <tr>
-                                    <td><?php echo htmlspecialchars($anomaly->getClientInfo()); ?></td>
-                                    <td><?php echo htmlspecialchars($anomaly->getMeterId()); ?></td>
-                                    <td><?php echo date('d/m/Y', strtotime($anomaly->getEntryDate())); ?></td>
-                                    <td><?php echo number_format($anomaly->getPreviousValue(), 2) . " kWh"; ?></td>
-                                    <td><?php echo number_format($anomaly->getEnteredValue(), 2) . " kWh"; ?></td>
-                                    <td>
-                                        <span class="badge badge-anomaly">
-                                            <?php echo ($anomaly->getDifference() > 0 ? '+' : '') . number_format($anomaly->getDifference(), 2) . " kWh"; ?>
-                                        </span>
-                                    </td>
-                                    <td><?php echo htmlspecialchars($anomaly->getStatus()); ?></td>
-                                    <td>
-                                        <a class="btn btn-secondary btn-sm view-anomaly" href="correction.php?id=<?php echo $anomaly->getAnomalyId(); ?>">
-                                            <i class="fas fa-eye"></i>
-                            </a>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
+<div class="card">
+<div class="tab-navigation">
+    <button class="tab-button active" data-target="monthly-anomalies-content">Anomalies Mensuelles</button>
+    <button class="tab-button" data-target="annual-anomalies-content">Anomalies Annuelles</button>
+</div>
+    <!-- Tab content will be displayed here -->
+    <div class="tab-content" id="monthly-anomalies-content">
+        <div class="card-header">
+            <h2>Anomalies Mensuelles Détectées</h2>
+        </div>
+        <div class="filters">
+            <div class="search-container">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Rechercher un client..." id="search-anomaly">
             </div>
+            <div class="filter-group">
+                <label for="severity-filter">Sévérité:</label>
+                <select id="severity-filter">
+                    <option value="">Toutes</option>
+                    <option value="high">Haute (>100 kWh)</option>
+                    <option value="medium">Moyenne (50-100 kWh)</option>
+                    <option value="low">Faible (<50 kWh)</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="status-filter">Statut:</label>
+                <select id="status-filter">
+                    <option value="">Tous</option>
+                    <option value="pending">En attente</option>
+                    <option value="verified">Vérifiée</option>
+                    <option value="resolved">Résolue</option>
+                </select>
+            </div>
+        </div>
+
+        <table class="anomalies-table">
+            <thead>
+                <tr>
+                    <th>Client</th>
+                    <th>ID Compteur</th>
+                    <th>Date de saisie</th>
+                    <th>Valeur précédente</th>
+                    <th>Valeur saisie</th>
+                    <th>Écart</th>
+                    <th>Statut</th>
+                    <th>Corriger</th>
+                </tr>
+            </thead>
+            <tbody>
+    <?php if (empty($anomalies)): ?>
+        <tr>
+            <td colspan="8" class="text-center">Aucune anomalie détectée</td>
+        </tr>
+    <?php else: ?>
+        <?php foreach ($anomalies as $anomaly): ?>
+            <tr>
+                <td><?php echo htmlspecialchars($anomaly->getClientInfo()); ?></td>
+                <td><?php echo htmlspecialchars($anomaly->getMeterId()); ?></td>
+                <td><?php echo date('d/m/Y', strtotime($anomaly->getEntryDate())); ?></td>
+                <td><?php echo number_format($anomaly->getPreviousValue(), 2) . " kWh"; ?></td>
+                <td><?php echo number_format($anomaly->getEnteredValue(), 2) . " kWh"; ?></td>
+                <td>
+                    <span class="badge badge-anomaly">
+                        <?php echo ($anomaly->getDifference() > 0 ? '+' : '') . number_format($anomaly->getDifference(), 2) . " kWh"; ?>
+                    </span>
+                </td>
+                <td><?php echo htmlspecialchars($anomaly->getStatus()); ?></td>
+                <td>
+                    <a class="btn btn-secondary btn-sm view-anomaly" href="correction.php?id=<?php echo $anomaly->getAnomalyId(); ?>">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                </td>
+            </tr>
+        <?php endforeach; ?>
+    <?php endif; ?>
+</tbody>
+        </table>
+    </div>
+
+    <!-- Annual anomalies content -->
+    <div class="tab-content" id="annual-anomalies-content" style="display: none;">
+        <div class="card-header">
+            <h2>Anomalies Annuelles Détectées</h2>
+            <p>Ces anomalies sont détectées lorsque l'écart entre la consommation attendue et la consommation réelle dépasse 50 kWh.</p>
+        </div>
+        <table class="table anomalies-table">
+            <thead>
+                <tr>
+                    <th>Client</th>
+                    <th>Année</th>
+                    <th>Consommation Attendue</th>
+                    <th>Consommation Réelle</th>
+                    <th>Écart (kWh)</th>
+                    <th>Écart (%)</th>
+                    <th>Statut</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if (empty($annualAnomalies)): ?>
+                    <tr>
+                        <td colspan="7" class="text-center">Aucune anomalie annuelle détectée</td>
+                    </tr>
+                <?php else: ?>
+                    <?php foreach ($annualAnomalies as $anomaly): ?>
+                        <?php 
+                            $ecart = $anomaly->getEcart();
+                            $ecartAbs = abs($ecart);
+                            $ecartPct = $anomaly->getConsommationReelle() ? 
+                                number_format(($ecartAbs / $anomaly->getConsommationReelle()) * 100, 2) : 0;
+                                
+                            $ecartClass = '';
+                            if ($ecartAbs > 200) {
+                                $ecartClass = 'badge-anomaly';
+                            } elseif ($ecartAbs > 100) {
+                                $ecartClass = 'badge-warning';
+                            }
+                        ?>
+                        <tr>
+                            <td><?php echo htmlspecialchars($anomaly->getClientName()); ?></td>
+                            <td><?php echo $anomaly->getAnnee(); ?></td>
+                            <td><?php echo number_format($anomaly->getConsommationAttendue(), 2) . " kWh"; ?></td>
+                            <td><?php echo number_format($anomaly->getConsommationReelle(), 2) . " kWh"; ?></td>
+                            <td>
+                                <span class="badge <?php echo $ecartClass; ?>">
+                                    <?php echo number_format($ecart, 2) . " kWh"; ?>
+                                </span>
+                            </td>
+                            <td><?php echo $ecartPct . "%"; ?></td>
+                            <td><?php echo htmlspecialchars($anomaly->getStatut()); ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
 
             <div class="card">
                 <div class="card-header">
@@ -334,6 +470,32 @@ $anomalies = $consommationService->getAllMonthlyConsumptionsWithAnomaly();
 
     <script src="../../assets/js/main.js"></script>
     <script src="js/consumption.js"></script>
+    <script>
+    // Tab navigation
+    document.addEventListener('DOMContentLoaded', function() {
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        tabButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // Hide all tab contents
+                tabContents.forEach(content => {
+                    content.style.display = 'none';
+                });
+                
+                // Remove active class from all buttons
+                tabButtons.forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                
+                // Show the target content and make button active
+                const targetId = this.dataset.target;
+                document.getElementById(targetId).style.display = 'block';
+                this.classList.add('active');
+            });
+        });
+    });
+</script>
 </body>
 
 </html>

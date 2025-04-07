@@ -135,6 +135,46 @@ CREATE TABLE `notifications` (
     REFERENCES `clients` (`client_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+
+DROP TABLE IF EXISTS `consommations_annuelles`;
+CREATE TABLE IF NOT EXISTS `consommations_annuelles` (
+  `consommation_annuelle_id` int NOT NULL AUTO_INCREMENT,
+  `client_id` int NOT NULL,
+  `annee` int NOT NULL,
+  `consommation_attendue` decimal(10,2) NOT NULL,
+  `consommation_reelle` decimal(10,2) DEFAULT NULL,
+  `ecart` decimal(10,2) GENERATED ALWAYS AS ((`consommation_attendue` - `consommation_reelle`)) STORED,
+  `statut` enum('en_attente','verifie','corrige') COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'en_attente',
+  `notes` text COLLATE utf8mb4_general_ci,
+  `date_creation` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`consommation_annuelle_id`),
+  UNIQUE KEY `client_annee` (`client_id`,`annee`),
+  KEY `client_id` (`client_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
+-- Create annual invoices table
+CREATE TABLE `factures_annuelles` (
+  `facture_annuelle_id` int NOT NULL AUTO_INCREMENT,
+  `client_id` int NOT NULL,
+  `consommation_annuelle_id` int NOT NULL,
+  `annee` int NOT NULL,
+  `montant_total` decimal(10,2) NOT NULL,
+  `consommation_totale` decimal(10,2) NOT NULL,
+  `date_emission` datetime DEFAULT CURRENT_TIMESTAMP,
+  `statut` enum('emise','payee','annulee') COLLATE utf8mb4_general_ci DEFAULT 'emise',
+  PRIMARY KEY (`facture_annuelle_id`),
+  UNIQUE KEY `client_annee` (`client_id`, `annee`),
+  KEY `consommation_annuelle_id` (`consommation_annuelle_id`),
+  CONSTRAINT `factures_annuelles_ibfk_1` FOREIGN KEY (`client_id`) REFERENCES `clients` (`client_id`),
+  CONSTRAINT `factures_annuelles_ibfk_2` FOREIGN KEY (`consommation_annuelle_id`) REFERENCES `consommations_annuelles` (`consommation_annuelle_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
+INSERT INTO `consommations_annuelles` (`consommation_annuelle_id`, `client_id`, `annee`, `consommation_attendue`, `consommation_reelle`, `statut`, `notes`, `date_creation`) VALUES
+(4, 1, 2025, 4000.00, 3600.00, 'en_attente', NULL, '2025-04-06 22:00:29');
+
+
 INSERT INTO `users` (`user_id`, `email`, `password_hash`, `role`, `created_at`) VALUES 
 (3, 'kihl@mail.com', '$2y$10$Tg0br9R43vKoTpkEU82pv.4IdimHVqgGXtUGXQvZP8AVYMN7M7vH6', 'fournisseur', '2025-03-31 21:52:44'),
 (4, 'youns@mail.com', '$2y$10$a5bQeRcigLAMYfKkiUgC1.kDy8EZzynEpYDgalEA/9I.1/2K9XZOy', 'client', '2025-04-01 16:18:51');

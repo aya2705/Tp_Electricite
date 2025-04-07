@@ -11,6 +11,9 @@ require_once '../../traitement/FactureMensuelleService.php';
 // Initialize services
 $factureMensuelleService = new FactureMensuelleService();
 $consommationService = new ConsommationService();
+require_once '../../traitement/FactureAnnuelleService.php';
+$factureAnnuelleService = new FactureAnnuelleService();
+$facturesAnnuelles = $factureAnnuelleService->getAllFacturesAnnuelles();
 
 // Get factures
 $factures = $factureMensuelleService->getAllFacturesMensuelles();
@@ -100,52 +103,154 @@ $factures = $factureMensuelleService->getAllFacturesMensuelles();
                     <input type="text" placeholder="Rechercher une facture..." id="search-client">
                 </div>
             </div>
-
+            <div class="tab-navigation">
+            <button class="tab-button active" data-target="monthly-invoices-content">Factures Mensuelles</button>
+            <button class="tab-button" data-target="annual-invoices-content">Factures Annuelles</button>
+            </div>
+            <div class="tab-content" id="monthly-invoices-content">
             <!-- Table des factures -->
             <div class="card">
                 
                 <div class="card-body">
                     <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Période</th>
-                                <th>N° Facture</th>
-                                <th>Consommation</th>
-                                <th>Montant</th>
-                                <th>Date émission</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php if (!empty($factures)): ?>
-                                <?php foreach ($factures as $facture): ?>
-                                    <tr>
-                                        <td><?php echo date('m/Y', strtotime($facture['date_emission'])); ?></td>
-                                        <td>FAC-<?php echo str_pad($facture['facture_id'], 6, '0', STR_PAD_LEFT); ?></td>
-                                        <td><?php echo number_format($facture['consommation']); ?> kWh</td>
-                                        <td><?php echo number_format($facture['montant'], 2); ?> MAD</td>
-                                        <td><?php echo date('d/m/Y', strtotime($facture['date_emission'])); ?></td>
-                                        <td class="actions">
-                                            <a href="../../traitement/generate_pdf.php?id=<?php echo $facture['facture_id']; ?>"
-                                                class="btn btn-sm btn-info" target="_blank">
-                                                <i class="fas fa-download"></i>
-                                            </a>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            <?php else: ?>
-                                <tr>
-                                    <td colspan="7" class="text-center">Aucune facture disponible</td>
-                                </tr>
-                            <?php endif; ?>
-                        </tbody>
+                    <thead>
+    <tr>
+        <th>Client ID</th>  <!-- New column for client ID -->
+        <th>Période</th>
+        <th>N° Facture</th>
+        <th>Consommation</th>
+        <th>Montant</th>
+        <th>Date émission</th>
+        <th>Actions</th>
+    </tr>
+</thead>
+<tbody>
+    <?php if (!empty($factures)): ?>
+        <?php foreach ($factures as $facture): ?>
+            <tr>
+                <td><?php echo $facture['client_id']; ?></td>  <!-- Display client ID -->
+                <td><?php echo date('m/Y', strtotime($facture['date_emission'])); ?></td>
+                <td>FAC-<?php echo str_pad($facture['facture_id'], 6, '0', STR_PAD_LEFT); ?></td>
+                <td><?php echo number_format($facture['consommation']); ?> kWh</td>
+                <td><?php echo number_format($facture['montant'], 2); ?> MAD</td>
+                <td><?php echo date('d/m/Y', strtotime($facture['date_emission'])); ?></td>
+                <td class="actions">
+                    <a href="../../traitement/generate_pdf.php?id=<?php echo $facture['facture_id']; ?>"
+                       class="btn btn-sm btn-info" target="_blank">
+                        <i class="fas fa-download"></i>
+                    </a>
+                </td>
+            </tr>
+        <?php endforeach; ?>
+    <?php else: ?>
+        <tr>
+            <td colspan="7" class="text-center">Aucune facture disponible</td>
+        </tr>
+    <?php endif; ?>
+</tbody>
                     </table>
                 </div>
             </div>
+            </div>
+            <div class="tab-content" id="annual-invoices-content" style="display: none;">
+    <div class="card">
+        <div class="card-header">
+            <h2>Factures Annuelles</h2>
+        </div>
+        <div class="card-body">
+        <table class="data-table">
+    <!-- Replace the annual invoices table header and rows in factures.php around line 178 -->
+<thead>
+    <tr>
+        <th>Année</th>
+        <th>N° Facture</th>
+        <th>Client</th>
+        <th>Consommation Attendue</th>
+        <th>Consommation Réelle</th>
+        <th>Écart (kWh)</th>
+        <th>Écart Facturé</th>
+        <th>Montant</th>
+        <th>Date émission</th>
+        <th>Statut</th>
+        <th>Actions</th>
+    </tr>
+</thead>
+<tbody>
+    <?php if (!empty($facturesAnnuelles)): ?>
+        <?php foreach ($facturesAnnuelles as $facture): ?>
+            <?php 
+                // Style for ecart
+                $ecartClass = abs($facture['ecart']) > 100 ? 'badge-anomaly' : 'badge-warning';
+                // Calculate absolute ecart that was used for billing
+                $ecartFacture = abs($facture['ecart']);
+            ?>
+            <tr>
+                <td><?php echo $facture['annee']; ?></td>
+                <td>FA-<?php echo str_pad($facture['facture_annuelle_id'], 6, '0', STR_PAD_LEFT); ?></td>
+                <td><?php echo htmlspecialchars($facture['full_name']); ?></td>
+                <td><?php echo number_format($facture['consommation_attendue'], 0) . " kWh"; ?></td>
+                <td><?php echo number_format($facture['consommation_reelle'], 0) . " kWh"; ?></td>
+                <td>
+                    <span class="badge <?php echo $ecartClass; ?>">
+                        <?php echo number_format($facture['ecart'], 0) . " kWh"; ?>
+                    </span>
+                </td>
+                <td><?php echo number_format($ecartFacture, 0) . " kWh"; ?></td>
+                <td><?php echo number_format($facture['montant_total'], 2) . " MAD"; ?></td>
+                <td><?php echo date('d/m/Y', strtotime($facture['date_emission'])); ?></td>
+                <td>
+                    <span class="badge <?php echo $facture['statut'] === 'emise' ? 'badge-warning' : ($facture['statut'] === 'payee' ? 'badge-success' : 'badge-danger'); ?>">
+                        <?php echo ucfirst($facture['statut']); ?>
+                    </span>
+                </td>
+                <td class="actions">
+                    <a href="../../traitement/generate_annual_pdf.php?id=<?php echo $facture['facture_annuelle_id']; ?>"
+                       class="btn btn-sm btn-info" target="_blank">
+                        <i class="fas fa-download"></i>
+                    </a>
+                </td>
+            </tr>
+        <?php endforeach; ?>
+    <?php else: ?>
+        <tr>
+            <td colspan="11" class="text-center">Aucune facture annuelle disponible</td> <!-- Updated colspan to match column count -->
+        </tr>
+    <?php endif; ?>
+</tbody>
+</table>
+        </div>
+    </div>
+</div>
         </div>
     </div>
 
     <script src="../../assets/js/main.js"></script>
+    <script>
+    // Tab navigation
+    document.addEventListener('DOMContentLoaded', function() {
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        tabButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // Hide all tab contents
+                tabContents.forEach(content => {
+                    content.style.display = 'none';
+                });
+                
+                // Remove active class from all buttons
+                tabButtons.forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                
+                // Show the target content and make button active
+                const targetId = this.dataset.target;
+                document.getElementById(targetId).style.display = 'block';
+                this.classList.add('active');
+            });
+        });
+    });
+</script>
 </body>
 
 </html>
