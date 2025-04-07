@@ -122,6 +122,7 @@ CREATE TABLE `factures_mensuelle` (
   CONSTRAINT `factures_mensuelle_ibfk_2` FOREIGN KEY (`consommation_id`) REFERENCES `consommations_mensuelles` (`consommation_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+-- Table notifications
 CREATE TABLE `notifications` (
   `notification_id` INT AUTO_INCREMENT PRIMARY KEY,
   `client_id` INT NOT NULL,
@@ -134,6 +135,16 @@ CREATE TABLE `notifications` (
   CONSTRAINT `fk_notification_client` FOREIGN KEY (`client_id`)
     REFERENCES `clients` (`client_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Table `tarification`
+CREATE TABLE `tarification` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `tranche1` DECIMAL(10, 2) NOT NULL,
+    `tranche2` DECIMAL(10, 2) NOT NULL,
+    `tranche3` DECIMAL(10, 2) NOT NULL,
+    `tva` DECIMAL(5, 2) NOT NULL,
+    `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
 
 INSERT INTO `users` (`user_id`, `email`, `password_hash`, `role`, `created_at`) VALUES 
 (3, 'kihl@mail.com', '$2y$10$Tg0br9R43vKoTpkEU82pv.4IdimHVqgGXtUGXQvZP8AVYMN7M7vH6', 'fournisseur', '2025-03-31 21:52:44'),
@@ -148,4 +159,12 @@ INSERT INTO `compteurs` (`compteur_id`, `client_id`, `numero_serie`) VALUES
 
 INSERT INTO `consommations_mensuelles` (`consommation_id`, `client_id`, `compteur_id`, `kw`, `image_path`, `created_at`) VALUES 
 (7, 1, 1, 1600.00, '../../uploads/meters/meter_1.jpg', '2025-03-01 10:00:00');
+
+INSERT INTO `tarification` (`tranche1`, `tranche2`, `tranche3`, `tva`) 
+VALUES (0.82, 0.92, 1.1, 18)
+ON DUPLICATE KEY UPDATE 
+    tranche1 = VALUES(tranche1), 
+    tranche2 = VALUES(tranche2), 
+    tranche3 = VALUES(tranche3), 
+    tva = VALUES(tva);
 

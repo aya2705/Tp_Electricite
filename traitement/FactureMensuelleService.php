@@ -2,18 +2,20 @@
 include_once __DIR__ . "/../DB/FactureMensuelleDAO.php";
 include_once __DIR__ . "/../models/FactureMensuelle.php";
 include_once __DIR__ . "/../DB/ConsommationDAO.php";
+require_once __DIR__ . '/../DB/TarificationDAO.php';
 
 class FactureMensuelleService
 {
     private $factureMensuelleRepository;
     private $consommationRepository;
+    private $tarificationDAO;
 
     public function __construct()
     {
         // used to submit a new facture
         $this->factureMensuelleRepository = new FactureMensuelleDAO();
         $this->consommationRepository = new ConsommationDAO();
-
+        $this->tarificationDAO = new TarificationDAO();
     }
 
     // Ajout d'un paramètre optionnel pour la consommation précédente
@@ -32,26 +34,19 @@ class FactureMensuelleService
 
     public function calculateMontant($kw)
     {
-        // Initialize variables
-        $montantHT = 0;
+        $tarification = $this->tarificationDAO->getTarification();
 
-        // Calculate based on consumption tiers
+        $montantHT = 0;
         if ($kw <= 100) {
-            $montantHT = $kw * 0.82;
-        } elseif ($kw <= 150) {
-            $montantHT = (100 * 0.82) + (($kw - 100) * 0.92);
+            $montantHT = $kw * $tarification['tranche1'];
+        } elseif ($kw <= 300) {
+            $montantHT = (100 * $tarification['tranche1']) + (($kw - 100) * $tarification['tranche2']);
         } else {
-            $montantHT = (100 * 0.82) + (50 * 0.92) + (($kw - 150) * 1.1);
+            $montantHT = (100 * $tarification['tranche1']) + (200 * $tarification['tranche2']) + (($kw - 300) * $tarification['tranche3']);
         }
 
-        // Calculate TVA (18%)
-        $tva = $montantHT * 0.18;
-
-        // Calculate total amount including TVA
-        $montantTTC = $montantHT + $tva;
-
-        // Round to 2 decimal places
-        return round($montantTTC, 2);
+        $tva = $montantHT * ($tarification['tva'] / 100);
+        return round($montantHT + $tva, 2);
     }
 
     public function getLastFactureMensuelleByClient($clientId)

@@ -61,6 +61,9 @@ $anomalies = $consommationService->getAllMonthlyConsumptionsWithAnomaly();
                 <a href="claims-frs.php">
                     <i class="fas fa-exclamation-circle"></i> Réclamations
                 </a>
+                <a href="settings.php" >
+                    <i class="fas fa-cog"></i> Paramètres
+                </a>
                 <a href="../deconnexion.php" class="logout">
                     <i class="fas fa-sign-out-alt"></i> Déconnexion
                 </a>
@@ -99,27 +102,6 @@ $anomalies = $consommationService->getAllMonthlyConsumptionsWithAnomaly();
                     </div>
                     <div class="value"><?php echo number_format($clientsEnRetardCount); ?></div>
                     <div class="label">Clients en retard</div>
-                </div>
-            </div>
-
-            <div class="control-panel">
-                <h2>Contrôle de la période de saisie</h2>
-                <div class="period-status">
-                    <div class="status-indicator status-active"></div>
-                    <div>
-                        <strong>Période de saisie:</strong> ACTIVE jusqu'au 30/11/2023
-                    </div>
-                </div>
-                <div class="control-actions mt-3">
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="period-toggle" checked>
-                        <span class="toggle-slider"></span>
-                    </label>
-                    <span>Activer/Désactiver la période de saisie</span>
-                    <button class="btn btn-secondary" id="config-period-btn">
-                        <i class="fas fa-cog"></i> Configurer les dates
-                    </button>
-
                 </div>
             </div>
 

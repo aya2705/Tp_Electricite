@@ -45,6 +45,9 @@ $reclamationId = $_SESSION['reclamation_id'] ?? null;
                 <a href="claims-frs.php" class="active">
                     <i class="fas fa-exclamation-circle" class="active"></i> Réclamations
                 </a>
+                <a href="settings.php" >
+                    <i class="fas fa-cog"></i> Paramètres
+                </a>
                 <a href="../deconnexion.php" class="logout">
                     <i class="fas fa-sign-out-alt"></i> Déconnexion
                 </a>
