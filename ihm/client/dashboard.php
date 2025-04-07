@@ -11,26 +11,24 @@ require_once '../../traitement/consommationService.php';
 require_once '../../traitement/FactureMensuelleService.php';
 require_once '../../traitement/notificationService.php';
 
-$clientId = $_SESSION['client_id'];
+$clientId = $_SESSION['client_id'] ?? 0;
 
 // Initialize services
 $factureMensuelleService = new FactureMensuelleService();
 $consommationService = new ConsommationService();
+$notificationService = new NotificationService();
 
 // Get client data
 $factures = $factureMensuelleService->getAllFacturesByClient($clientId);
 $lastFacture = $factureMensuelleService->getLastFactureMensuelleByClient($clientId);
 $lastConsumption = $consommationService->getLastMonthlyConsumption($clientId);
+$notifications = $notificationService->getClientNotifications($clientId);
 
 // Format data for display
 $consumptionDate = !empty($lastConsumption) ? date('F Y', strtotime($lastConsumption->getCreatedAt())) : 'N/A';
 $consumptionValue = !empty($lastConsumption) ? $lastConsumption->getKw() : 0;
 $lastFactureMontant = !empty($lastFacture) ? number_format($lastFacture['montant'], 2) : '0.00';
 $lastFacturePeriode = !empty($lastFacture) ? date('F Y', strtotime($lastFacture['date_emission'])) : 'N/A';
-
-// Utiliser la classe NotificationDAO
-$notificationDAO = new NotificationDAO();
-$notifications = $notificationDAO->getNotifications($clientId);
 
 // Modification ici : récupération de la moyenne du montant des factures mensuelles
 $year = date('Y');
@@ -148,54 +146,43 @@ $formattedAvg = number_format($avgMontant, 2) . " MAD";
                 </table>
             </div>
 
-        
-
             <div class="card">
                 <div class="card-header">
-                    <h2 class="notif">Notifications</h2>
-
+                    <h2>Notifications</h2>
                 </div>
-
                 <div class="card-body p-0">
                     <?php if (!empty($notifications)): ?>
                         <div id="notifications-container" class="table-responsive">
                             <table class="table table-hover">
-                                
                                 <tbody>
                                     <?php foreach ($notifications as $notification): ?>
                                         <tr>
                                             <td>
                                                 <div class="d-flex flex-column">
-                                                    <p class="contenu-notif"><?= htmlspecialchars($notification['contenu']) ?>
-                                                    </p>
+                                                    <p class="contenu-notif"><?= htmlspecialchars($notification['content']) ?></p>
                                                     <div class="d-flex justify-content-between">
-                                                        <small
-                                                            class="date-notif"><?= date('d/m/Y H:i', strtotime($notification['date_reponse'])) ?></small>
-                                                        <small class="status-notif">Statut:
-                                                            <?= $notification['status'] ?></small>
+                                                        <small class="date-notif"><?= date('d/m/Y H:i', strtotime($notification['created_at'])) ?></small>
+                                                        <small class="status-notif">Statut: <?= $notification['status'] ?></small>
                                                     </div>
                                                 </div>
                                             </td>
                                             <td class="align-middle text-center">
-                                            <form method="post" action="../../traitement/notificationService.php" class="d-inline">
-                                                <input type="hidden" name="action" value="delete">
-                                                <input type="hidden" name="notificationId" value="<?= $notification['reponse_id'] ?>">
-                                                <button type="submit" class="supp-btn"><i class="fa-solid fa-trash"></i></button>
-                                            </form>
+                                                <form method="post" action="../../traitement/notificationService.php">
+                                                    <input type="hidden" name="action" value="delete">
+                                                    <input type="hidden" name="notificationId" value="<?= $notification['notification_id'] ?>">
+                                                    <button type="submit" class="supp-btn"><i class="fa-solid fa-trash"></i></button>
+                                                </form>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
                                 </tbody>
                             </table>
                         </div>
-                        
                     <?php else: ?>
                         <div class="text-center py-4">
                             <p class="text-muted">Aucune nouvelle notification.</p>
                         </div>
                     <?php endif; ?>
-
-                   
                 </div>
             </div>
         </div>

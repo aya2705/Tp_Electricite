@@ -1,24 +1,40 @@
 <?php
 
-class notification{
-    private $reclamation_id;
-    private $contenu;
-    private $statut;
-    private $date_reponse;
+class Notification {
+    private $notification_id;
+    private $client_id;
+    private $type;
+    private $reference;
+    private $content;
+    private $status;
+    private $created_at;
+    private $read_at;
 
-    public function __construct($reclamation_id, $contenu, $statut, $date_reponse = null) {
-        $this->reclamation_id = $reclamation_id;
-        $this->contenu = $contenu;
-        $this->statut = $statut;
-        $this->date_reponse = $date_reponse;
+    public function __construct($client_id, $type, $content, $reference = null, $status = 'non_lue') {
+        $this->client_id = $client_id;
+        $this->type = $type;
+        $this->content = $content;
+        $this->reference = $reference;
+        $this->status = $status;
     }
 
-    public function getReclamationId() { return $this->reclamation_id; }
-    public function getContenu() { return $this->contenu; }
-    public function getStatut() { return $this->statut; }
-    public function getDateReponse() { return $this->date_reponse; }
+    // Getters
+    public function getNotificationId() { return $this->notification_id; }
+    public function getClientId()       { return $this->client_id; }
+    public function getType()           { return $this->type; }
+    public function getReference()      { return $this->reference; }
+    public function getContent()        { return $this->content; }
+    public function getStatus()         { return $this->status; }
+    public function getCreatedAt()      { return $this->created_at; }
+    public function getReadAt()         { return $this->read_at; }
 
-    public function setContenu($contenu) { $this->contenu = $contenu; }
-    public function setStatut($statut) { $this->statut = $statut; }
-    public function setDateReponse($date_reponse) { $this->date_reponse = $date_reponse; }
+    // Setters
+    public function setNotificationId($notification_id) { $this->notification_id = $notification_id; }
+    public function setClientId($client_id)             { $this->client_id = $client_id; }
+    public function setType($type)                      { $this->type = $type; }
+    public function setReference($reference)            { $this->reference = $reference; }
+    public function setContent($content)                { $this->content = $content; }
+    public function setStatus($status)                  { $this->status = $status; }
+    public function setCreatedAt($created_at)           { $this->created_at = $created_at; }
+    public function setReadAt($read_at)                 { $this->read_at = $read_at; }
 }
