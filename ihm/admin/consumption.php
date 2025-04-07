@@ -1,7 +1,22 @@
 <?php
 session_start();
 require_once '../../traitement/consommationService.php';
+require_once '../../traitement/StatistiquesService.php';
+
+// Instancier les services
 $consommationService = new ConsommationService();
+$statistiquesService = new StatistiquesService();
+
+// Pour les indicateurs mensuels, définir le mois et l'année actuels
+$currentMonth = (int)date('m');
+$currentYear = (int)date('Y');
+
+// Récupérer les métriques dynamiques pour le mois actuel
+$eligibleClientsCount   = $statistiquesService->getEligibleClientsCount();
+$saisiesEffectueesCount = $statistiquesService->getSaisiesEffectueesCount($currentMonth, $currentYear);
+$anomaliesCount         = $statistiquesService->getAnomaliesCount($currentMonth, $currentYear);
+$clientsEnRetardCount   = $statistiquesService->getClientsEnRetardCount($currentMonth, $currentYear);
+
 $anomalies = $consommationService->getAllMonthlyConsumptionsWithAnomaly();
 ?>
 <!DOCTYPE html>
@@ -13,6 +28,14 @@ $anomalies = $consommationService->getAllMonthlyConsumptionsWithAnomaly();
     <title>Gestion des Saisies - Gestion des Factures</title>
     <link rel="stylesheet" href="../../assets/css/main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .dashboard-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+    </style>
 </head>
 
 <body>
@@ -53,28 +76,28 @@ $anomalies = $consommationService->getAllMonthlyConsumptionsWithAnomaly();
                     <div class="icon">
                         <i class="fas fa-users"></i>
                     </div>
-                    <div class="value">1,245</div>
+                    <div class="value"><?php echo number_format($eligibleClientsCount); ?></div>
                     <div class="label">Clients éligibles</div>
                 </div>
                 <div class="stat-card success">
                     <div class="icon">
                         <i class="fas fa-check-circle"></i>
                     </div>
-                    <div class="value">846</div>
+                    <div class="value"><?php echo number_format($saisiesEffectueesCount); ?></div>
                     <div class="label">Saisies effectuées</div>
                 </div>
                 <div class="stat-card warning">
                     <div class="icon">
                         <i class="fas fa-exclamation-triangle"></i>
                     </div>
-                    <div class="value">24</div>
+                    <div class="value"><?php echo number_format($anomaliesCount); ?></div>
                     <div class="label">Anomalies détectées</div>
                 </div>
                 <div class="stat-card danger">
                     <div class="icon">
                         <i class="fas fa-times-circle"></i>
                     </div>
-                    <div class="value">375</div>
+                    <div class="value"><?php echo number_format($clientsEnRetardCount); ?></div>
                     <div class="label">Clients en retard</div>
                 </div>
             </div>

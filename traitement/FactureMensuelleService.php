@@ -72,6 +72,10 @@ class FactureMensuelleService
         return $factures;
     }
 
+    public function getAnnualAverageMontant($clientId, $year) {
+        return $this->factureMensuelleRepository->getAnnualAverageMontant($clientId, $year);
+    }
+
     /*
     public function generateFactureMensuelleTemplate($factureId) {
         $factureData = $this->factureMensuelleRepository->getFactureById($factureId);

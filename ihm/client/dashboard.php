@@ -31,6 +31,11 @@ $lastFacturePeriode = !empty($lastFacture) ? date('F Y', strtotime($lastFacture[
 // Utiliser la classe NotificationDAO
 $notificationDAO = new NotificationDAO();
 $notifications = $notificationDAO->getNotifications($clientId);
+
+// Modification ici : récupération de la moyenne du montant des factures mensuelles
+$year = date('Y');
+$avgMontant = $factureMensuelleService->getAnnualAverageMontant($clientId, $year);
+$formattedAvg = number_format($avgMontant, 2) . " MAD";
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -42,7 +47,12 @@ $notifications = $notificationDAO->getNotifications($clientId);
     <link rel="stylesheet" href="../../assets/css/main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-       
+    .dashboard-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }  
     </style>
 </head>
 
@@ -90,8 +100,8 @@ $notifications = $notificationDAO->getNotifications($clientId);
                 </div>
                 <div class="stat-card">
                     <h3>Moyenne Annuelle</h3>
-                    <div class="value">310 kWh</div>
-                    <p>Année 2023</p>
+                    <div class="value"><?php echo $formattedAvg; ?></div>
+                    <p>Année <?php echo $year; ?></p>
                 </div>
             </div>
 
