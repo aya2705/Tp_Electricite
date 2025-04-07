@@ -9,7 +9,12 @@ class PeriodeSaisieDAO {
     }
 
     public function getPeriodeSaisie() {
-        $stmt = $this->db->prepare("SELECT * FROM periode_saisie LIMIT 1");
+        $stmt = $this->db->prepare("
+            SELECT * FROM periode_saisie 
+            WHERE active = TRUE 
+            ORDER BY id DESC 
+            LIMIT 1
+        ");
         $stmt->execute();
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }

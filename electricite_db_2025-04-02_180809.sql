@@ -131,7 +131,6 @@ CREATE TABLE `notifications` (
   `content` TEXT NOT NULL,
   `status` ENUM('non_lue', 'lue') DEFAULT 'non_lue',
   `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-  `read_at` DATETIME DEFAULT NULL,
   CONSTRAINT `fk_notification_client` FOREIGN KEY (`client_id`)
     REFERENCES `clients` (`client_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

@@ -8,14 +8,28 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'client') {
 
 require_once '../../traitement/consommationService.php';
 require_once '../../models/consommationMensuelle.php';
+require_once '../../DB/PeriodeSaisieDAO.php';
 
 $clientId = $_SESSION['client_id'];
-
+// Vérifier si la saisie est possible
 $consommationService = new ConsommationService();
 $lastConsumption = $consommationService->getLastMonthlyConsumption($clientId);
-$consumptionDate = !empty($lastConsumption) ? date('F Y', strtotime($lastConsumption->getCreatedAt())) : 'N/A';
+// Correction de l'initialisation des variables erronées
+$consumptionDate = !empty($lastConsumption) ? $lastConsumption->getCreatedAt() : 'N/A';
 $consumptionValue = !empty($lastConsumption) ? $lastConsumption->getKw() : 0;
+$canSubmit = false;
+$periodeMessage = "";
 $imagePath = $lastConsumption ? $lastConsumption->getImagePath() : '';
+
+try {
+    $canSubmit = $consommationService->isInActivePeriod();
+    
+    if (!$canSubmit) {
+        $periodeMessage = "La saisie de consommation n'est pas disponible actuellement. Veuillez revenir pendant la période de saisie définie.";
+    }
+} catch (Exception $e) {
+    $periodeMessage = "Impossible de vérifier la période de saisie.";
+}
 
 // Handle form submission
 $message = '';
@@ -31,20 +45,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!file_exists($uploadDir)) {
                 mkdir($uploadDir, 0777, true);
             }
-            
             $fileName = uniqid() . '_' . $_FILES['meter-photo']['name'];
             $imagePath = $uploadDir . $fileName;
             
             if (move_uploaded_file($_FILES['meter-photo']['tmp_name'], $imagePath)) {
                 $consumption = new ConsommationMensuelle($kw, $imagePath);
-                // echo $consumption->getKw();
-                // echo "<p>photo saved to directory and object created now calling the service to persist the consumption</p>";
                 $result = $consommationService->submitConsommationMensuelle($clientId, $consumption);
-                 
+                
                 if ($result) {
-                    // echo "Good";
                     header('Location: consommations.php');
-                    exit;
+                } else {
+                    throw new Exception('Erreur lors de la soumission de la consommation');
                 }
             } else {
                 throw new Exception('Erreur lors du téléchargement de l\'image');
@@ -55,11 +66,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $messageType = 'error';
     }
 }
-
-// Format date for display
-$consumptionDate = !empty($lastConsumption) ? date('F Y', strtotime($lastConsumption->getCreatedAt())) : 'N/A';
-$consumptionValue = !empty($lastConsumption) ? $lastConsumption->getKw() : 0;
-$imagePath = $lastConsumption ? $lastConsumption->getImagePath() : '';
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -124,25 +130,31 @@ $imagePath = $lastConsumption ? $lastConsumption->getImagePath() : '';
                         </div>
                     </div>
 
-                    <form id="consumption-form" method="POST" action="consommations.php" enctype="multipart/form-data">
-                        <div class="form-group">
-                            <label for="current-value">Valeur actuelle du compteur (kWh)</label>
-                            <input type="number" name="current-value" id="current-value" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Photo du compteur</label>
-                            <div class="upload-container">
-                                <i class="fas fa-camera fa-2x"></i>
-                                <p>Déposez votre photo ici</p>
-                                <input type="file" name="meter-photo" id="meter-photo" accept="image/*" required>
+                    <?php if ($canSubmit): ?>
+                        <form id="consumption-form" method="POST" action="consommations.php" enctype="multipart/form-data">
+                            <div class="form-group">
+                                <label for="current-value">Valeur actuelle du compteur (kWh)</label>
+                                <input type="number" name="current-value" id="current-value" required>
                             </div>
+                            <div class="form-group">
+                                <label>Photo du compteur</label>
+                                <div class="upload-container">
+                                    <i class="fas fa-camera fa-2x"></i>
+                                    <p>Déposez votre photo ici</p>
+                                    <input type="file" name="meter-photo" id="meter-photo" accept="image/*" required>
+                                </div>
+                            </div>
+                            <div class="form-actions text-center mt-3">
+                                <button type="submit" class="btn btn-primary">
+                                    Soumettre la saisie
+                                </button>
+                            </div>
+                        </form>
+                    <?php else: ?>
+                        <div class="alert alert-warning">
+                            <i class="fas fa-clock"></i> <?php echo $periodeMessage; ?>
                         </div>
-                        <div class="form-actions text-center mt-3">
-                            <button type="submit" class="btn btn-primary">
-                                Soumettre la saisie
-                            </button>
-                        </div>
-                    </form>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
