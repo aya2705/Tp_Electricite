@@ -1,18 +1,34 @@
 <?php
 require_once '../../DB/TarificationDAO.php';
+require_once '../../DB/PeriodeSaisieDAO.php';
 
 $tarificationDAO = new TarificationDAO();
 $tarification = $tarificationDAO->getTarification();
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $tranche1 = $_POST['tranche1'];
-    $tranche2 = $_POST['tranche2'];
-    $tranche3 = $_POST['tranche3'];
-    $tva = $_POST['tva'];
+$periodeSaisieDAO = new PeriodeSaisieDAO();
+$periodeSaisie = $periodeSaisieDAO->getPeriodeSaisie();
 
-    $tarificationDAO->updateTarification($tranche1, $tranche2, $tranche3, $tva);
-    header("Location: settings.php?success=1");
-    exit;
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['update_tarification'])) {
+        $tranche1 = $_POST['tranche1'];
+        $tranche2 = $_POST['tranche2'];
+        $tranche3 = $_POST['tranche3'];
+        $tva = $_POST['tva'];
+
+        $tarificationDAO->updateTarification($tranche1, $tranche2, $tranche3, $tva);
+        header("Location: settings.php?success=1");
+        exit;
+    }
+
+    if (isset($_POST['update_periode'])) {
+        $date_debut = $_POST['date_debut'];
+        $date_fin = $_POST['date_fin'];
+        $active = isset($_POST['active']) ? 1 : 0;
+
+        $periodeSaisieDAO->updatePeriodeSaisie($date_debut, $date_fin, $active);
+        header("Location: settings.php?periode_success=1");
+        exit;
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -63,7 +79,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             display: inline-block;
             width: 60px;
             height: 30px;
-            margin-right: 15px;
         }
 
         .toggle-switch input {
@@ -169,6 +184,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             color: var(--success-color);
             font-weight: bold;
         }
+
+        .status-inactive {
+            color: var(--danger-color);
+            font-weight: bold;
+        }
+
+        .status-indicator {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 10px;
+        }
+
+        .status-active {
+            background-color: var(--success-color);
+        }
+
+        .status-inactive {
+            background-color: var(--danger-color);
+        }
+
+        .settings-form input[type="date"] {
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .form-actions button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
     </style>
 </head>
 
@@ -180,7 +229,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <h2>Espace Fournisseur</h2>
             </div>
             <div class="sidebar-menu">
-            <a href="dashboard.php">
+                <a href="dashboard.php">
                     <i class="fas fa-tachometer-alt"></i> Tableau de bord
                 </a>
                 <a href="clients.php">
@@ -221,7 +270,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </div>
                             <div class="setting-control">
                                 <div style="display: flex; align-items: center;">
-                                    <input type="number" id="tranche1" name="tranche1" value="<?= htmlspecialchars($tarification['tranche1'] ?? 0.82) ?>" step="0.01" required class="form-control" style="width: 100px;">
+                                    <input type="number" id="tranche1" name="tranche1"
+                                        value="<?= htmlspecialchars($tarification['tranche1'] ?? 0.82) ?>" step="0.01"
+                                        required class="form-control" style="width: 100px;">
                                     <span style="margin: 0 10px;">DH/kWh</span>
                                 </div>
                             </div>
@@ -233,7 +284,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </div>
                             <div class="setting-control">
                                 <div style="display: flex; align-items: center;">
-                                    <input type="number" id="tranche2" name="tranche2" value="<?= htmlspecialchars($tarification['tranche2'] ?? 0.92) ?>" step="0.01" required class="form-control" style="width: 100px;">
+                                    <input type="number" id="tranche2" name="tranche2"
+                                        value="<?= htmlspecialchars($tarification['tranche2'] ?? 0.92) ?>" step="0.01"
+                                        required class="form-control" style="width: 100px;">
                                     <span style="margin: 0 10px;">DH/kWh</span>
                                 </div>
                             </div>
@@ -245,7 +298,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </div>
                             <div class="setting-control">
                                 <div style="display: flex; align-items: center;">
-                                    <input type="number" id="tranche3" name="tranche3" value="<?= htmlspecialchars($tarification['tranche3'] ?? 1.1) ?>" step="0.01" required class="form-control" style="width: 100px;">
+                                    <input type="number" id="tranche3" name="tranche3"
+                                        value="<?= htmlspecialchars($tarification['tranche3'] ?? 1.1) ?>" step="0.01"
+                                        required class="form-control" style="width: 100px;">
                                     <span style="margin: 0 10px;">DH/kWh</span>
                                 </div>
                             </div>
@@ -257,38 +312,77 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </div>
                             <div class="setting-control">
                                 <div style="display: flex; align-items: center;">
-                                    <input type="number" id="tva" name="tva" value="<?= htmlspecialchars($tarification['tva'] ?? 18) ?>" step="0.01" required class="form-control" style="width: 100px;">
+                                    <input type="number" id="tva" name="tva"
+                                        value="<?= htmlspecialchars($tarification['tva'] ?? 18) ?>" step="0.01" required
+                                        class="form-control" style="width: 100px;">
                                     <span style="margin: 0 10px;">%</span>
                                 </div>
                             </div>
                         </div>
 
                         <div class="form-actions mt-3">
-                            <button type="submit" class="btn btn-primary">Enregistrer les paramètres</button>
+                            <button type="submit" name="update_tarification" class="btn btn-primary">Enregistrer les
+                                paramètres</button>
                             <button type="reset" class="btn btn-secondary">Réinitialiser</button>
                         </div>
                     </form>
                 </div>
             </div>
+
             <div class="control-panel">
                 <h2>Contrôle de la période de saisie</h2>
                 <div class="period-status">
-                    <div class="status-indicator status-active"></div>
+                    <div class="status-indicator <?= $periodeSaisie['active'] ? 'status-active' : 'status-inactive' ?>">
+                    </div>
                     <div>
-                        <strong>Période de saisie:</strong> ACTIVE jusqu'au 30/11/2023
+                        <strong>Période de saisie :</strong>
+                        <?php if ($periodeSaisie['active']): ?>
+                            ACTIVE (du <?= htmlspecialchars($periodeSaisie['date_debut']) ?> au
+                            <?= htmlspecialchars($periodeSaisie['date_fin']) ?>)
+                        <?php else: ?>
+                            INACTIVE (prévue du <?= htmlspecialchars($periodeSaisie['date_debut']) ?> au
+                            <?= htmlspecialchars($periodeSaisie['date_fin']) ?>)
+                        <?php endif; ?>
                     </div>
                 </div>
-                <div class="control-actions mt-3">
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="period-toggle" checked>
-                        <span class="toggle-slider"></span>
-                    </label>
-                    <span>Activer/Désactiver la période de saisie</span>
-                    <button class="btn btn-secondary" id="config-period-btn">
-                        <i class="fas fa-cog"></i> Configurer les dates
-                    </button>
 
-                </div>
+                <form method="POST" action="" class="settings-form mt-3">
+                    <div class="setting-row">
+                        <div class="setting-label">
+                            <label for="date_debut">Date de début</label>
+                        </div>
+                        <div class="setting-control">
+                            <input type="date" id="date_debut" name="date_debut"
+                                value="<?= htmlspecialchars($periodeSaisie['date_debut']) ?>" required>
+                        </div>
+                    </div>
+
+                    <div class="setting-row">
+                        <div class="setting-label">
+                            <label for="date_fin">Date de fin</label>
+                        </div>
+                        <div class="setting-control">
+                            <input type="date" id="date_fin" name="date_fin"
+                                value="<?= htmlspecialchars($periodeSaisie['date_fin']) ?>" required>
+                        </div>
+                    </div>
+
+                    <div class="setting-row">
+                        <div class="setting-label">
+                            <label for="active">Activer la période</label>
+                        </div>
+                        <div class="setting-control">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="active" name="active" <?= $periodeSaisie['active'] ? 'checked' : '' ?>>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-actions mt-3">
+                        <button type="submit" name="update_periode" class="btn btn-primary">Enregistrer</button>
+                    </div>
+                </form>
             </div>
 
         </div>

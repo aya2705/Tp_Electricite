@@ -146,6 +146,15 @@ CREATE TABLE `tarification` (
     `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+-- Table `periode_saisie`
+CREATE TABLE `periode_saisie` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `date_debut` DATE NOT NULL,
+    `date_fin` DATE NOT NULL,
+    `active` BOOLEAN DEFAULT TRUE,
+    `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
 INSERT INTO `users` (`user_id`, `email`, `password_hash`, `role`, `created_at`) VALUES 
 (3, 'kihl@mail.com', '$2y$10$Tg0br9R43vKoTpkEU82pv.4IdimHVqgGXtUGXQvZP8AVYMN7M7vH6', 'fournisseur', '2025-03-31 21:52:44'),
 (4, 'youns@mail.com', '$2y$10$a5bQeRcigLAMYfKkiUgC1.kDy8EZzynEpYDgalEA/9I.1/2K9XZOy', 'client', '2025-04-01 16:18:51');
@@ -167,4 +176,7 @@ ON DUPLICATE KEY UPDATE
     tranche2 = VALUES(tranche2), 
     tranche3 = VALUES(tranche3), 
     tva = VALUES(tva);
+
+INSERT INTO `periode_saisie` (`date_debut`, `date_fin`, `active`) 
+VALUES ('2025-04-18', '2025-04-25', TRUE);    
 
