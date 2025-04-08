@@ -19,6 +19,7 @@ $clientsEnRetardCount   = $statistiquesService->getClientsEnRetardCount($current
 // Récupérer les anomalies
 $anomalies = $consommationService->getAllMonthlyConsumptionsWithAnomaly();
 $annualAnomalies = $consommationService->getAnnualConsumptionsWithAnomalies();
+$recentEntries = $consommationService->getRecentConsumptionEntries(10);
 
 // Générer les factures annuelles
 $invoicesGenerated = $consommationService->generateInvoicesForAnnualAnomalies();
@@ -310,9 +311,36 @@ $successMessage = $invoicesGenerated > 0 ? "$invoicesGenerated nouvelles facture
 
             <!-- Dernières Saisies Section -->
             <div class="card">
-                <div class="card-header"><h2>Dernières Saisies</h2></div>
-                <!-- ... (keep existing entries section) ... -->
-            </div>
+    <div class="card-header"><h2>Dernières Saisies</h2></div>
+    <div class="card-body">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Client</th>
+                    <th>Compteur</th>
+                    <th>Consommation</th>
+                    <th>Date de saisie</th>
+                    
+                </tr>
+            </thead>
+            <tbody>
+                <?php if (empty($recentEntries)): ?>
+                    <tr><td colspan="5" class="text-center">Aucune saisie récente</td></tr>
+                <?php else: ?>
+                    <?php foreach($recentEntries as $entry): ?>
+                        <tr>
+                            <td><?= htmlspecialchars($entry['client_name']) ?></td>
+                            <td><?= htmlspecialchars($entry['compteur_id']) ?></td>
+                            <td><?= number_format($entry['kw'], 2) ?> kWh</td>
+                            <td><?= date('d/m/Y H:i', strtotime($entry['created_at'])) ?></td>
+                            
+                        </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
         </div>
     </div>
 

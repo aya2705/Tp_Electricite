@@ -3,20 +3,22 @@ require_once __DIR__ . '/../DB/FactureAnnuelleDAO.php';
 require_once __DIR__ . '/../DB/ConsommationAnnuelleDAO.php';
 require_once __DIR__ . '/../DB/ClientDAO.php';
 require_once __DIR__ . '/../models/FactureAnnuelle.php';
+require_once __DIR__ . '/notificationService.php';  // Add this line
 
 class FactureAnnuelleService {
     private $factureAnnuelleDAO;
     private $consommationAnnuelleDAO;
     private $clientDAO;
+    private $notificationService;  // Add this line
     
     public function __construct() {
         $this->factureAnnuelleDAO = new FactureAnnuelleDAO();
         $this->consommationAnnuelleDAO = new ConsommationAnnuelleDAO();
         $this->clientDAO = new ClientDAO();
+        $this->notificationService = new NotificationService();  // Add this line
     }
     
     // Generate annual invoice from annual consumption data
-    // Update the generateFactureAnnuelle method
     public function generateFactureAnnuelle($clientId, $annee) {
         // Get annual consumption data
         $consommationAnnuelle = $this->consommationAnnuelleDAO->getParClientEtAnnee($clientId, $annee);
@@ -49,7 +51,21 @@ class FactureAnnuelleService {
             $type
         );
         
-        return $this->factureAnnuelleDAO->creerFacture($factureAnnuelle);
+        $result = $this->factureAnnuelleDAO->creerFacture($factureAnnuelle);
+        
+        // Add notification for the annual invoice
+        $notificationMessage = ($type === 'credit') 
+            ? "Une facture annuelle de régularisation (avoir) de {$montantTotal} MAD a été générée pour l'année {$annee}."
+            : "Une facture annuelle de régularisation de {$montantTotal} MAD a été générée pour l'année {$annee}.";
+            
+        $this->notificationService->addNotification(
+            $clientId,
+            'facture',
+            'FA-' . str_pad($factureAnnuelle->getFactureId(), 6, '0', STR_PAD_LEFT),
+            $notificationMessage
+        );
+        
+        return $result;
     }
     // Calculate annual invoice amount
     

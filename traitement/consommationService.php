@@ -246,4 +246,14 @@ public function generateInvoicesForAnnualAnomalies() {
     
     return $invoicesGenerated;
 }
+
+/**
+ * Get recent consumption entries with no anomalies
+ * 
+ * @param int $limit Maximum number of entries to return
+ * @return array List of consumption entries
+ */
+public function getRecentConsumptionEntries($limit = 10) {
+    return $this->consommationRepository->getRecentConsumptions($limit);
+}
 }

@@ -10,6 +10,7 @@ require_once __DIR__ . '/../DB/ConsommationAnnuelleDAO.php';
 require_once __DIR__ . '/../DB/consommationDAO.php';
 require_once __DIR__ . '/../DB/ClientDAO.php';
 require_once __DIR__ . '/../models/ConsommationAnnuelle.php';
+require_once __DIR__ . '/notificationService.php';
 
 // Check if user is logged in and is an agent for action requests
 if (isset($_REQUEST['action']) && $_REQUEST['action'] === 'upload_consumption' && 
@@ -203,6 +204,18 @@ if ($existingInvoice && $consommationReelle > 0) {
     // Update the invoice with the new amount
     $factureAnnuelleDAO->updateInvoiceAmount($existingInvoice['facture_annuelle_id'], $nouveauMontant);
     error_log("Updated invoice #{$existingInvoice['facture_annuelle_id']} with new amount: $nouveauMontant based on ecart: $ecart");
+    $notificationService = new NotificationService();
+    $type = ($consommationAnnuelle->getEcart() >= 0) ? 'credit' : 'debit';
+    $notificationMessage = ($type === 'credit') 
+        ? "Votre facture annuelle de régularisation (avoir) pour {$annee} a été mise à jour à {$nouveauMontant} MAD."
+        : "Votre facture annuelle de régularisation pour {$annee} a été mise à jour à {$nouveauMontant} MAD.";
+    
+    $notificationService->addNotification(
+        $clientId,
+        'facture',
+        'FA-' . str_pad($existingInvoice['facture_annuelle_id'], 6, '0', STR_PAD_LEFT),
+        $notificationMessage
+    );
 }
 
 

@@ -283,5 +283,31 @@ if (!class_exists('ConsommationDAO')) {
                 return 0; // Return 0 on error
             }
         }
+
+        /**
+ * Get recent normal consumption entries (without anomalies)
+ * 
+ * @param int $limit Maximum number of entries to return
+ * @return array Array of consumption entries with client data
+ */
+public function getRecentConsumptions($limit = 10) {
+    $stmt = $this->db->prepare("
+        SELECT cm.consommation_id, cm.client_id, cm.compteur_id, cm.kw, cm.created_at, 
+               c.full_name as client_name
+        FROM consommations_mensuelles cm
+        JOIN clients c ON cm.client_id = c.client_id
+        LEFT JOIN anomalies_consommation ac ON cm.consommation_id = ac.consommation_id
+        WHERE ac.anomalie_id IS NULL
+        ORDER BY cm.created_at DESC
+        LIMIT :limit
+    ");
+    
+    $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+    $stmt->execute();
+    
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+        
     }
 }
