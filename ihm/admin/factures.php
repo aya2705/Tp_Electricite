@@ -191,17 +191,22 @@ $factures = $factureMensuelleService->getAllFacturesMensuelles();
                 <td><?php echo number_format($facture['consommation_attendue'], 0) . " kWh"; ?></td>
                 <td><?php echo number_format($facture['consommation_reelle'], 0) . " kWh"; ?></td>
                 <td>
-                    <span class="badge <?php echo $ecartClass; ?>">
-                        <?php echo number_format($facture['ecart'], 0) . " kWh"; ?>
-                    </span>
-                </td>
-                <td><?php echo number_format($ecartFacture, 0) . " kWh"; ?></td>
-                <td><?php echo number_format($facture['montant_total'], 2) . " MAD"; ?></td>
-                <td><?php echo date('d/m/Y', strtotime($facture['date_emission'])); ?></td>
-                <td>
-                    <span class="badge <?php echo $facture['statut'] === 'emise' ? 'badge-warning' : ($facture['statut'] === 'payee' ? 'badge-success' : 'badge-danger'); ?>">
-                        <?php echo ucfirst($facture['statut']); ?>
-                    </span>
+                <span class="badge <?php echo $ecartClass; ?>">
+            <?php echo ($facture['ecart'] >= 0 ? '+' : '') . number_format($facture['ecart'], 0) . " kWh"; ?>
+        </span>
+    </td>
+    <td><?php echo number_format($ecartFacture, 0) . " kWh"; ?></td>
+    <td>
+        <span class="<?php echo $facture['type'] === 'credit' ? 'text-success' : 'text-danger'; ?>">
+            <?php echo number_format($facture['montant_total'], 2) . " MAD"; ?>
+            <?php echo $facture['type'] === 'credit' ? ' (Crédit)' : ' (Débit)'; ?>
+        </span>
+    </td>
+    <td><?php echo date('d/m/Y', strtotime($facture['date_emission'])); ?></td>
+    <td>
+        <span class="badge <?php echo $facture['statut'] === 'emise' ? 'badge-warning' : ($facture['statut'] === 'payee' ? 'badge-success' : 'badge-danger'); ?>">
+            <?php echo ucfirst($facture['statut']); ?>
+        </span>
                 </td>
                 <td class="actions">
                     <a href="../../traitement/generate_annual_pdf.php?id=<?php echo $facture['facture_annuelle_id']; ?>"

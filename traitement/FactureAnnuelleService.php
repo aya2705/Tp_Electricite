@@ -17,58 +17,65 @@ class FactureAnnuelleService {
     
     // Generate annual invoice from annual consumption data
     // Update the generateFactureAnnuelle method
-public function generateFactureAnnuelle($clientId, $annee) {
-    // Get annual consumption data
-    $consommationAnnuelle = $this->consommationAnnuelleDAO->getParClientEtAnnee($clientId, $annee);
-    
-    if (!$consommationAnnuelle) {
-        throw new Exception("Données de consommation annuelle non disponibles pour ce client et cette année");
-    }
-    
-    if ($consommationAnnuelle->getConsommationReelle() === null) {
-        throw new Exception("La consommation réelle n'a pas encore été calculée pour cette année");
-    }
-    
-    // Get the consumption difference (ecart)
-    $ecart = abs($consommationAnnuelle->getEcart());
-    
-    // Calculate total amount based on the consumption difference (ecart)
-    $montantTotal = $this->calculateAnnualTotal($ecart);
-    
-    // Create and save invoice
-    $factureAnnuelle = new FactureAnnuelle(
-        $clientId,
-        $consommationAnnuelle->getId(),
-        $annee,
-        $montantTotal,
-        $consommationAnnuelle->getConsommationReelle()
-    );
-    
-    return $this->factureAnnuelleDAO->creerFacture($factureAnnuelle);
-}
-    // Calculate annual invoice amount
-    private function calculateAnnualTotal($consommationTotale) {
-        // Base calculation on total consumption
-        $montantHT = 0;
+    public function generateFactureAnnuelle($clientId, $annee) {
+        // Get annual consumption data
+        $consommationAnnuelle = $this->consommationAnnuelleDAO->getParClientEtAnnee($clientId, $annee);
         
-        // Calculate based on consumption tiers (yearly rates)
-        if ($consommationTotale <= 1200) { // Up to 1200 kWh per year
-            $montantHT = $consommationTotale * 0.80;
-        } elseif ($consommationTotale <= 1800) { // 1200-1800 kWh per year
-            $montantHT = (1200 * 0.80) + (($consommationTotale - 1200) * 0.90);
-        } else { // Over 1800 kWh per year
-            $montantHT = (1200 * 0.80) + (600 * 0.90) + (($consommationTotale - 1800) * 1.05);
+        if (!$consommationAnnuelle) {
+            throw new Exception("Données de consommation annuelle non disponibles pour ce client et cette année");
         }
         
-        // Calculate TVA (18%)
-        $tva = $montantHT * 0.18;
+        if ($consommationAnnuelle->getConsommationReelle() === null) {
+            throw new Exception("La consommation réelle n'a pas encore été calculée pour cette année");
+        }
         
-        // Final amount
-        $montantTTC = $montantHT + $tva;
+        // Get the raw ecart (can be positive or negative)
+        $ecart = $consommationAnnuelle->getEcart();
+        $ecartAbs = abs($ecart);
         
-        // Round to 2 decimal places
-        return round($montantTTC, 2);
+        // Calculate total amount based on the absolute difference
+        $montantTotal = $this->calculateAnnualTotal($ecartAbs);
+        
+        // Set invoice type based on ecart direction
+        $type = ($ecart >= 0) ? 'credit' : 'debit';
+        
+        // Create and save invoice
+        $factureAnnuelle = new FactureAnnuelle(
+            $clientId,
+            $consommationAnnuelle->getId(),
+            $annee,
+            $montantTotal,
+            $consommationAnnuelle->getConsommationReelle(),
+            $type
+        );
+        
+        return $this->factureAnnuelleDAO->creerFacture($factureAnnuelle);
     }
+    // Calculate annual invoice amount
+    
+// Calculate annual invoice amount based on ecart (difference)
+public function calculateAnnualTotal($ecart) {
+    // Base calculation on ecart (difference amount)
+    $montantHT = 0;
+    
+    // Calculate based on ecart tiers
+    if ($ecart <= 100) { // Small discrepancy
+        $montantHT = $ecart * 1.00; // 1 MAD per kWh
+    } elseif ($ecart <= 500) { // Medium discrepancy
+        $montantHT = (100 * 1.00) + (($ecart - 100) * 0.90); // 0.90 MAD per kWh after first 100
+    } else { // Large discrepancy
+        $montantHT = (100 * 1.00) + (400 * 0.90) + (($ecart - 500) * 0.80); // 0.80 MAD per kWh after 500
+    }
+    
+    // Calculate TVA (18%)
+    $tva = $montantHT * 0.18;
+    
+    // Final amount
+    $montantTTC = $montantHT + $tva;
+    
+    // Round to 2 decimal places
+    return round($montantTTC, 2);
+}
     
     // Get invoice details by ID
     public function getFactureById($id) {

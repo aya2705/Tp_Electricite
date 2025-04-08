@@ -8,9 +8,10 @@ class FactureAnnuelle {
     private $consommationTotale;
     private $dateEmission;
     private $statut;
-    private $clientName; // For display purposes
+    private $clientName; 
+    private $type; // 'credit' or 'debit'
     
-    public function __construct($clientId, $consommationAnnuelleId, $annee, $montantTotal, $consommationTotale) {
+    public function __construct($clientId, $consommationAnnuelleId, $annee, $montantTotal, $consommationTotale, $type = 'debit') {
         $this->clientId = $clientId;
         $this->consommationAnnuelleId = $consommationAnnuelleId;
         $this->annee = $annee;
@@ -18,6 +19,7 @@ class FactureAnnuelle {
         $this->consommationTotale = $consommationTotale;
         $this->statut = 'emise';
         $this->dateEmission = date('Y-m-d H:i:s');
+        $this->type = $type; // Set default to debit
     }
     
     // Getters
@@ -30,6 +32,7 @@ class FactureAnnuelle {
     public function getDateEmission() { return $this->dateEmission; }
     public function getStatut() { return $this->statut; }
     public function getClientName() { return $this->clientName; }
+    public function getType() { return $this->type; }
     
     // Setters
     public function setFactureId($id) { $this->factureId = $id; }
@@ -41,4 +44,5 @@ class FactureAnnuelle {
     public function setDateEmission($date) { $this->dateEmission = $date; }
     public function setStatut($statut) { $this->statut = $statut; }
     public function setClientName($name) { $this->clientName = $name; }
+    public function setType($type) { $this->type = $type; }
 }

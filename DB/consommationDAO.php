@@ -259,5 +259,29 @@ if (!class_exists('ConsommationDAO')) {
                 throw new Exception("Failed to correct consumption: " . $e->getMessage());
             }
         }
+        public function calculerConsommationTotaleAnnuelle($clientId, $annee) {
+            try {
+                $stmt = $this->db->prepare("
+                    SELECT SUM(kw) as total_consumption
+                    FROM consommations_mensuelles
+                    WHERE client_id = :client_id
+                    AND YEAR(created_at) = :annee
+                ");
+                $stmt->execute([
+                    'client_id' => $clientId,
+                    'annee' => $annee
+                ]);
+                $result = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                // Log the query result for debugging
+                error_log("Annual consumption calculation for client $clientId, year $annee: " . 
+                         ($result && $result['total_consumption'] ? $result['total_consumption'] : 'No data'));
+                
+                return $result && $result['total_consumption'] ? floatval($result['total_consumption']) : 0;
+            } catch (PDOException $e) {
+                error_log("Error calculating annual consumption: " . $e->getMessage());
+                return 0; // Return 0 on error
+            }
+        }
     }
 }

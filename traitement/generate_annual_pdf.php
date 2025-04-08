@@ -1,14 +1,19 @@
 <?php
+// Add error display for debugging
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+
 session_start();
 if (!isset($_SESSION['user_id'])) {
     header('Location: ../connexion.php');
     exit;
 }
 
-include_once "../DB/FactureAnnuelleDAO.php";
-include_once "../DB/ConsommationAnnuelleDAO.php";
-include_once "../DB/ClientDAO.php";
-require_once __DIR__ . '/../vendor/autoload.php'; // Load autoloader
+// Use absolute paths with __DIR__ to ensure consistency
+require_once __DIR__ . '/../DB/FactureAnnuelleDAO.php';
+require_once __DIR__ . '/../DB/ConsommationAnnuelleDAO.php';
+require_once __DIR__ . '/../DB/ClientDAO.php';
+require_once __DIR__ . '/../vendor/autoload.php';
 
 if (!isset($_GET['id'])) {
     die("ID de facture manquant");
@@ -34,8 +39,15 @@ try {
     // Get client information
     $client = $clientDAO->getClientById($facture->getClientId());
     
+    if (!$client) {
+        die("Client non trouvé pour l'ID: " . $facture->getClientId());
+    }
+    
     // Get consumption details
     $consommation = $consommationAnnuelleDAO->getParClientEtAnnee($facture->getClientId(), $facture->getAnnee());
+    if (!$consommation) {
+        die("Données de consommation annuelle non trouvées");
+    }
 
     // Create PDF with enhanced design
     $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
@@ -52,10 +64,12 @@ try {
 
     $pdf->AddPage();
 
-    // Header
+    // Header - Show AVOIR (credit) or FACTURE (debit) based on invoice type
+    $invoiceType = $facture->getType() === 'credit' ? 'AVOIR' : 'FACTURE';
     $pdf->SetFont('helvetica', 'B', 18);
-    $pdf->Cell(0, 10, 'FACTURE ANNUELLE ' . $facture->getAnnee(), 0, 1, 'C');
+    $pdf->Cell(0, 10, $invoiceType . ' ANNUELLE ' . $facture->getAnnee(), 0, 1, 'C');
 
+    // Keep the reference line
     $pdf->SetFont('helvetica', '', 12);
     $pdf->Cell(0, 10, 'Référence: FA-' . str_pad($facture->getFactureId(), 6, '0', STR_PAD_LEFT), 0, 1, 'C');
     
@@ -106,11 +120,22 @@ try {
     $pdf->Cell(50, 7, $ecartText, 1, 0, 'R');
     $pdf->Cell(50, 7, '-', 1, 1, 'R');
     
+    // Add this section to show the absolute ecart used for billing
+    $pdf->Cell(80, 7, 'Écart absolu facturé', 1, 0, 'L');
+    $ecartAbs = abs($ecart);
+    $pdf->Cell(50, 7, number_format($ecartAbs, 2) . ' kWh', 1, 0, 'R');
+    $pdf->Cell(50, 7, number_format($facture->getMontantTotal(), 2) . ' MAD', 1, 1, 'R');
+    
     $pdf->Ln(5);
     
-    // Billing details
+    // Billing details - Different text based on credit/debit
     $pdf->SetFont('helvetica', 'B', 12);
-    $pdf->Cell(0, 10, 'Montant à payer', 0, 1);
+    if ($facture->getType() === 'credit') {
+        $pdf->Cell(130, 7, 'Montant à rembourser:', 0, 0, 'R');
+    } else {
+        $pdf->Cell(130, 7, 'Montant à payer:', 0, 0, 'R');
+    }
+    $pdf->Cell(50, 7, number_format($facture->getMontantTotal(), 2) . ' MAD', 0, 1, 'R');
     
     // Calculate TVA
     $montantHT = round($facture->getMontantTotal() / 1.18, 2);
@@ -130,21 +155,14 @@ try {
     // Footer with legal text
     $pdf->Ln(15);
     $pdf->SetFont('helvetica', 'I', 8);
-    $pdf->MultiCell(0, 4, "Note: Cette facture annuelle récapitule votre consommation électrique pour l'année " . $facture->getAnnee() . ". Elle est établie sur base de la consommation réelle relevée.\n\nMentions légales: Paiement sous 30 jours. Des pénalités de retard de 10% seront appliquées après cette date.", 0, 'J');
+    $pdf->MultiCell(0, 4, "Note: Cette facture est calculée sur la base de l'écart entre la consommation attendue et la consommation réelle pour l'année " . $facture->getAnnee() . ".\n\nMentions légales: Paiement sous 30 jours. Des pénalités de retard de 10% seront appliquées après cette date.", 0, 'J');
     
     // Generate filename
     $filename = 'Facture_Annuelle_' . $facture->getClientId() . '_' . $facture->getAnnee() . '.pdf';
     
-    // Save to file system
-    $dossierFactures = __DIR__ . '/factures/annuelles/';
-    if (!file_exists($dossierFactures)) {
-        mkdir($dossierFactures, 0755, true);
-    }
-    $cheminComplet = $dossierFactures . $filename;
-    $pdf->Output($cheminComplet, 'F');
-
-    // Download PDF
+    // Output directly to browser as download
     $pdf->Output($filename, 'D');
+    exit();
 
 } catch (Exception $e) {
     error_log("Error generating annual PDF: " . $e->getMessage());

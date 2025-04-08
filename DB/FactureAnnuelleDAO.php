@@ -28,9 +28,9 @@ class FactureAnnuelleDAO {
             
             $stmt = $this->db->prepare("
                 INSERT INTO factures_annuelles 
-                (client_id, consommation_annuelle_id, annee, montant_total, consommation_totale, date_emission, statut) 
+                (client_id, consommation_annuelle_id, annee, montant_total, consommation_totale, date_emission, statut, type) 
                 VALUES 
-                (:client_id, :consommation_annuelle_id, :annee, :montant_total, :consommation_totale, NOW(), :statut)
+                (:client_id, :consommation_annuelle_id, :annee, :montant_total, :consommation_totale, NOW(), :statut, :type)
             ");
             
             $stmt->execute([
@@ -39,7 +39,8 @@ class FactureAnnuelleDAO {
                 'annee' => $factureAnnuelle->getAnnee(),
                 'montant_total' => $factureAnnuelle->getMontantTotal(),
                 'consommation_totale' => $factureAnnuelle->getConsommationTotale(),
-                'statut' => $factureAnnuelle->getStatut()
+                'statut' => $factureAnnuelle->getStatut(),
+                'type' => $factureAnnuelle->getType()
             ]);
             
             $factureAnnuelle->setFactureId($this->db->lastInsertId());
@@ -120,6 +121,26 @@ class FactureAnnuelleDAO {
             'id' => $id
         ]);
     }
+
+    /**
+ * Update invoice amount when consumption data changes
+ * 
+ * @param int $factureId Invoice ID to update
+ * @param float $nouveauMontant New amount based on updated ecart
+ * @return bool Success or failure
+ */
+public function updateInvoiceAmount($factureId, $nouveauMontant) {
+    $stmt = $this->db->prepare("
+        UPDATE factures_annuelles
+        SET montant_total = :montant_total
+        WHERE facture_annuelle_id = :facture_id
+    ");
+    
+    return $stmt->execute([
+        'montant_total' => $nouveauMontant,
+        'facture_id' => $factureId
+    ]);
+}
 
     /**
  * Check if an invoice already exists for a client and year
