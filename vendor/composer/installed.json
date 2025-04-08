@@ -2,31 +2,32 @@
     "packages": [
         {
             "name": "tecnickcom/tcpdf",
-            "version": "6.9.0",
-            "version_normalized": "6.9.0.0",
+            "version": "6.7.8",
+            "version_normalized": "6.7.8.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/tecnickcom/TCPDF.git",
-                "reference": "f67b761b61f2370a9000d98c3b9111284544f722"
+                "reference": "7956f5e37863c6a569d5ccfae826f353a12a2493"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tecnickcom/TCPDF/zipball/f67b761b61f2370a9000d98c3b9111284544f722",
-                "reference": "f67b761b61f2370a9000d98c3b9111284544f722",
+                "url": "https://api.github.com/repos/tecnickcom/TCPDF/zipball/7956f5e37863c6a569d5ccfae826f353a12a2493",
+                "reference": "7956f5e37863c6a569d5ccfae826f353a12a2493",
                 "shasum": ""
             },
             "require": {
-                "ext-curl": "*",
-                "php": ">=7.1.0"
+                "php": ">=5.5.0"
             },
-            "time": "2025-03-30T16:56:09+00:00",
+            "time": "2024-12-13T19:31:40+00:00",
             "type": "library",
-            "installation-source": "dist",
+            "installation-source": "source",
             "autoload": {
                 "classmap": [
                     "config",
                     "include",
                     "tcpdf.php",
+                    "tcpdf_parser.php",
+                    "tcpdf_import.php",
                     "tcpdf_barcodes_1d.php",
                     "tcpdf_barcodes_2d.php",
                     "include/tcpdf_colors.php",
@@ -64,7 +65,7 @@
             ],
             "support": {
                 "issues": "https://github.com/tecnickcom/TCPDF/issues",
-                "source": "https://github.com/tecnickcom/TCPDF/tree/6.9.0"
+                "source": "https://github.com/tecnickcom/TCPDF/tree/6.7.8"
             },
             "funding": [
                 {

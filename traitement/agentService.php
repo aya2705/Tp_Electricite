@@ -121,6 +121,16 @@ function processConsumptionFile($filePath, $annee) {
     // Process each line
     $lines = explode("\n", $fileContent);
     
+    // If no lines are detected, try with different line endings
+    if (count($lines) <= 1 && strpos($fileContent, "\r") !== false) {
+        $lines = explode("\r", $fileContent);
+    }
+    
+    if (count($lines) == 0) {
+        $result['errors'][] = "Fichier vide ou format non reconnu";
+        return $result;
+    }
+    
     foreach ($lines as $lineNum => $line) {
         $line = trim($line);
         if (empty($line)) continue;
@@ -130,7 +140,7 @@ function processConsumptionFile($filePath, $annee) {
         // Parse line (format: clientId,expectedConsumption)
         $parts = explode(',', $line);
         if (count($parts) !== 2) {
-            $result['errors'][] = "Format invalide dans la ligne: $line";
+            $result['errors'][] = "Format invalide dans la ligne: $line (attendu: clientId,consommation)";
             continue;
         }
         
@@ -138,7 +148,7 @@ function processConsumptionFile($filePath, $annee) {
         $consommationAttendue = floatval(trim($parts[1]));
         
         if (empty($clientId) || $consommationAttendue <= 0) {
-            $result['errors'][] = "Données invalides dans la ligne: $line";
+            $result['errors'][] = "Données invalides dans la ligne: $line (client ID vide ou consommation <= 0)";
             continue;
         }
         
@@ -159,7 +169,7 @@ function processConsumptionFile($filePath, $annee) {
                 $consommationAttendue
             );
             
-            // Get actual consumption from monthly data
+            // If no monthly consumption data exists for this client/year, set consommation_reelle to NULL
             $consommationReelle = $consommationDAO->calculerConsommationTotaleAnnuelle($clientId, $annee);
             error_log("Actual consumption for client $clientId in year $annee: $consommationReelle");
             
@@ -179,6 +189,23 @@ function processConsumptionFile($filePath, $annee) {
             $result['processed']++;
             error_log("Successfully saved consumption for client $clientId");
             
+require_once __DIR__ . '/../DB/FactureAnnuelleDAO.php';
+require_once __DIR__ . '/../traitement/FactureAnnuelleService.php';
+$factureAnnuelleDAO = new FactureAnnuelleDAO();
+$factureAnnuelleService = new FactureAnnuelleService();
+
+$existingInvoice = $factureAnnuelleDAO->getInvoiceForClientAndYear($clientId, $annee);
+if ($existingInvoice && $consommationReelle > 0) {
+    // Invoice exists and we have real consumption data, so update the invoice
+    $ecart = abs($consommationAnnuelle->getEcart());
+    $nouveauMontant = $factureAnnuelleService->calculateAnnualTotal($ecart);
+    
+    // Update the invoice with the new amount
+    $factureAnnuelleDAO->updateInvoiceAmount($existingInvoice['facture_annuelle_id'], $nouveauMontant);
+    error_log("Updated invoice #{$existingInvoice['facture_annuelle_id']} with new amount: $nouveauMontant based on ecart: $ecart");
+}
+
+
         } catch (Exception $e) {
             error_log("Error processing client $clientId: " . $e->getMessage());
             $result['errors'][] = "Erreur avec le client ID $clientId: " . $e->getMessage();
@@ -187,6 +214,8 @@ function processConsumptionFile($filePath, $annee) {
     
     return $result;
 }
+    
+  
 
 /**
  * Get annual consumptions with significant discrepancies

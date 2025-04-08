@@ -115,9 +115,7 @@ $errorMessage = isset($_GET['error']) ? $_GET['error'] : '';
             <?php endif; ?>
 
             <div class="dashboard-card">
-                <h2>Télécharger les données de consommation annuelle</h2>
-                <p>En tant qu'agent, vous êtes responsable du téléchargement des données de consommation annuelle pour vérification.</p>
-                <p>Ces données seront comparées avec les consommations mensuelles déclarées par les clients.</p>
+                
                 
                 <div class="file-form">
                 <form action="../../traitement/agentService.php?action=upload_consumption" method="post" enctype="multipart/form-data">
@@ -158,16 +156,7 @@ $errorMessage = isset($_GET['error']) ? $_GET['error'] : '';
                 </div>
             </div>
 
-            <div class="instructions">
-                <h3>Instructions</h3>
-                <ol>
-                    <li>Collectez les données de consommation annuelle des compteurs des clients</li>
-                    <li>Préparez un fichier texte (.txt) avec le format ClientID,ConsommationAnnuelle sur chaque ligne</li>
-                    <li>Sélectionnez l'année correspondant aux données</li>
-                    <li>Téléchargez le fichier en utilisant le formulaire ci-dessus</li>
-                    <li>Le système comparera automatiquement les données avec les saisies mensuelles des clients</li>
-                </ol>
-            </div>
+            
         </div>
     </div>
     

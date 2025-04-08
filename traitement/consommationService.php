@@ -1,5 +1,7 @@
 <?php
 include_once __DIR__ . '/../DB/consommationDAO.php';
+require_once __DIR__ . '/../DB/ConsommationAnnuelleDAO.php';
+require_once __DIR__ . '/../DB/ClientDAO.php';
 require_once __DIR__ . '/../models/consommationMensuelle.php';
 require_once __DIR__ . '/../models/monthlyConsumptionAnomaly.php'; // Include the anomaly model
 require_once __DIR__ . '/../traitement/FactureMensuelleService.php'; // Include the anomaly model
@@ -175,4 +177,73 @@ class consommationService
             $lastNormalConsumption
         );
     }
+
+    /**
+ * Get all annual consumption anomalies with ecart > 50
+ * 
+ * @return array List of ConsommationAnnuelle objects with significant discrepancies
+ */
+public function getAnnualConsumptionsWithAnomalies() {
+    $consommationAnnuelleDAO = new ConsommationAnnuelleDAO();
+    $clientDAO = new ClientDAO();
+    
+    // Get all annual consumptions with data
+    $consumptions = $consommationAnnuelleDAO->getTousAvecEcarts();
+    
+    // Filter for significant anomalies (absolute ecart > 50 kWh)
+    $anomalies = array_filter($consumptions, function($c) {
+        return $c->getConsommationReelle() !== null && abs($c->getEcart()) > 50;
+    });
+    
+    // Add client names
+    foreach ($anomalies as $anomaly) {
+        $client = $clientDAO->getClientById($anomaly->getClientId());
+        if ($client) {
+            $anomaly->setClientName($client->getFullName());
+        } else {
+            $anomaly->setClientName("Client #" . $anomaly->getClientId());
+        }
+    }
+    
+    return $anomalies;  // Make sure this return statement is present
+}
+
+/**
+ * Generate invoices for annual consumption anomalies
+ * This will automatically create invoices for all anomalies that don't have invoices yet
+ * @return int Number of invoices generated
+ */
+public function generateInvoicesForAnnualAnomalies() {
+    // Get the service for generating annual invoices
+    require_once __DIR__ . '/FactureAnnuelleService.php';
+    $factureAnnuelleService = new FactureAnnuelleService();
+    
+    // Get anomalies
+    $anomalies = $this->getAnnualConsumptionsWithAnomalies();
+    $invoicesGenerated = 0;
+    
+    foreach ($anomalies as $anomaly) {
+        try {
+            // Check if invoice already exists
+            $existingInvoice = $factureAnnuelleService->getInvoiceForClientAndYear(
+                $anomaly->getClientId(),
+                $anomaly->getAnnee()
+            );
+            
+            if (!$existingInvoice) {
+                // Generate invoice for this anomaly
+                $factureAnnuelleService->generateFactureAnnuelle(
+                    $anomaly->getClientId(),
+                    $anomaly->getAnnee()
+                );
+                $invoicesGenerated++;
+            }
+        } catch (Exception $e) {
+            // Log error but continue with other anomalies
+            error_log("Failed to generate invoice for client {$anomaly->getClientId()}, year {$anomaly->getAnnee()}: " . $e->getMessage());
+        }
+    }
+    
+    return $invoicesGenerated;
+}
 }

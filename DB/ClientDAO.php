@@ -12,19 +12,19 @@ class ClientDAO
     }
 
     public function getClientById($client_id)
-    {
-        $stmt = $this->db->prepare("SELECT * FROM clients WHERE client_id = :client_id AND user_id IS NULL");
-        $stmt->execute(['client_id' => $client_id]);
-        $row = $stmt->fetch();
-        return $row ? new Client(
-            $row['client_id'], 
-            $row['user_id'], 
-            $row['full_name'], 
-            $row['address'], 
-            $row['phone'], 
-            $row['created_at']
-        ) : null;
-    }
+{
+    $stmt = $this->db->prepare("SELECT * FROM clients WHERE client_id = :client_id");
+    $stmt->execute(['client_id' => $client_id]);
+    $row = $stmt->fetch();
+    return $row ? new Client(
+        $row['client_id'], 
+        $row['user_id'], 
+        $row['full_name'], 
+        $row['address'], 
+        $row['phone'], 
+        $row['created_at']
+    ) : null;
+}
 
     public function getClientByUserId($user_id)
     {
