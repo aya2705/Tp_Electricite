@@ -90,4 +90,19 @@ class FactureMensuelleDAO {
         return $this->db->lastInsertId();
 
     }
+
+    public function getAnnualAverageMontant($clientId, $year) {
+        $stmt = $this->db->prepare("
+            SELECT AVG(montant) AS avgMontant 
+            FROM factures_mensuelle 
+            WHERE client_id = :client_id 
+              AND YEAR(date_emission) = :year
+        ");
+        $stmt->execute([
+            'client_id' => $clientId,
+            'year' => $year
+        ]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result ? $result['avgMontant'] : 0;
+    }
 }

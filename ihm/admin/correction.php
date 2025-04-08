@@ -70,6 +70,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <a href="claims-frs.php">
                     <i class="fas fa-exclamation-circle"></i> Réclamations
                 </a>
+                <a href="settings.php" >
+                    <i class="fas fa-cog"></i> Paramètres
+                </a>
                 <a href="../deconnexion.php" class="logout">
                     <i class="fas fa-sign-out-alt"></i> Déconnexion
                 </a>

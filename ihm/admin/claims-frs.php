@@ -45,6 +45,9 @@ $reclamationId = $_SESSION['reclamation_id'] ?? null;
                 <a href="claims-frs.php" class="active">
                     <i class="fas fa-exclamation-circle" class="active"></i> Réclamations
                 </a>
+                <a href="settings.php" >
+                    <i class="fas fa-cog"></i> Paramètres
+                </a>
                 <a href="../deconnexion.php" class="logout">
                     <i class="fas fa-sign-out-alt"></i> Déconnexion
                 </a>
@@ -56,8 +59,31 @@ $reclamationId = $_SESSION['reclamation_id'] ?? null;
             <h1>Gestion des Réclamations</h1>
 
             <div class="filters">
-
+                <div class="search-container">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Rechercher une réclamation..." id="search-claim">
+                </div>
+                <div class="filter-group">
+                    <label for="status-filter">Statut:</label>
+                    <select id="status-filter">
+                        <option value="">Tous</option>
+                        <option value="pending">En attente</option>
+                        <option value="processing">En traitement</option>
+                        <option value="resolved">Résolue</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="type-filter">Type:</label>
+                    <select id="type-filter">
+                        <option value="">Tous</option>
+                        <option value="fuite_externe">Fuite externe</option>
+                        <option value="fuite_interne">Fuite interne</option>
+                        <option value="facture">Facture</option>
+                        <option value="autre">Autre</option>
+                    </select>
+                </div>
             </div>
+
 
             <div class="claims-list" id="claims-list">
                 <?php foreach ($reclamations as $reclamation): ?>
@@ -102,13 +128,7 @@ $reclamationId = $_SESSION['reclamation_id'] ?? null;
                     </div>
                 <?php endforeach; ?>
             </div>
-
-            <div class="pagination">
-                <a href="#" class="active">1</a>
-                <a href="#">2</a>
-                <a href="#">3</a>
-                <a href="#">&raquo;</a>
-            </div>
+            
         </div>
     </div>
 

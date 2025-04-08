@@ -3,25 +3,38 @@ include_once __DIR__ . '/../DB/consommationDAO.php';
 require_once __DIR__ . '/../models/consommationMensuelle.php';
 require_once __DIR__ . '/../models/monthlyConsumptionAnomaly.php'; // Include the anomaly model
 require_once __DIR__ . '/../traitement/FactureMensuelleService.php'; // Include the anomaly model
-
-// as a client i need to submit a monthly submission (kw + image)
-// when i submit a new monthly consumption (it should be stored in the data base (monthly consumption)) 
-// i need a function that will take in the clientId and the consumption oject
-
-// constraints , after creating a monthly consumption , we need to know if we should create a monthly anomalie or create a monthlyFacture
-
-// if the monthly consumption is really superior or really inferior than the monthly consumption of the last month
-// then this consumption will be flagged as an anomalie
+require_once __DIR__ . '/../DB/PeriodeSaisieDAO.php';
 
 class consommationService
 {
     private $consommationRepository;
     private $factureMensuelleService;
+    private $periodeSaisieDAO;
+    private $notificationService;
+
     // here we will inject the data access object for consommationService
     public function __construct()
     {
         $this->factureMensuelleService = new FactureMensuelleService();
         $this->consommationRepository = new ConsommationDAO();
+        $this->periodeSaisieDAO = new PeriodeSaisieDAO();
+        $this->notificationService = new NotificationService();
+    }
+
+    /**
+     * Vérifie si la date actuelle est dans une période active de saisie
+     */
+    public function isInActivePeriod(): bool
+    {
+        $periode = $this->periodeSaisieDAO->getPeriodeSaisie();
+        if (!$periode) {
+            return false;
+        }
+        $currentDate = date('Y-m-d');
+        $startDate = $periode['date_debut'];
+        $endDate = $periode['date_fin'];
+
+        return $periode['active'] && ($currentDate >= $startDate && $currentDate <= $endDate);
     }
 
     public function getLastMonthlyConsumption($clientId)
@@ -31,6 +44,11 @@ class consommationService
 
     public function submitConsommationMensuelle($clientId, $consommationMensuelle)
     {
+        // Vérifier si nous sommes dans une période active de saisie
+        if (!$this->isInActivePeriod()) {
+            throw new Exception("La saisie n'est pas disponible en dehors de la période active.");
+        }
+
         // Récupérer le dernier relevé avant l'insertion
         $lastNormalConsumption = $this->consommationRepository->getLastNormalConsumption($clientId);
 
@@ -63,11 +81,29 @@ class consommationService
                 $difference,
                 $imagePath
             );
+
+            // Ajouter une notification pour la saisie de consommation en cas d'anomalie
+            $this->notificationService->addNotification(
+                $clientId,
+                'saisie_consommation',
+                null,
+                'Votre consommation a été enregistrée, mais une anomalie a été détectée. Un traitement est en cours.'
+            );
+
             return ['status' => 'anomaly', 'consumption' => $persistedConsumption];
 
         } else {
             // Passer le dernier relevé obtenu AVANT l'insertion
             $this->factureMensuelleService->submitFactureMensuelle($clientId, $clientName, $persistedConsumption, $lastNormalConsumption);
+
+            // Ajouter une notification pour la saisie de consommation
+            $this->notificationService->addNotification(
+                $clientId,
+                'saisie_consommation',
+                null,
+                'Votre consommation a été enregistrée avec succès.'
+            );
+
             return ['status' => 'normal', 'consumption' => $persistedConsumption];
         }
     }
