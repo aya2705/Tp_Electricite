@@ -73,16 +73,37 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["action"]) && $_POST["
         die("Erreur: ID de réclamation ou texte de réponse invalide.");
     }
 
-    // Création des objets nécessaires
-    $notification = new notification($reclamation_id, $response_text, $claim_status);
+    // Correction de la création de l'objet Notification (ligne modifiée)
+    $notification = new Notification(
+        $reclamation_id,  // client_id (utilisé ici comme identifiant de réclamation)
+        'response',       // type
+        $response_text,   // content
+        $reclamation_id,  // reference
+        $claim_status     // status
+    );
     $reclamation = new Reclamation($reclamation_id, null, null, null, $claim_status);
 
-    // Traitement via DAO
-    if (!reclamationDAO::traiterReponse($notification, $reclamation)) {
-        error_log("Échec du traitement de la réclamation ID: $reclamation_id, Statut: $claim_status, Réponse: $response_text");
-        die("Erreur lors du traitement de la réclamation.");
+    // Traitement via DAO et envoi de notification
+    if (reclamationDAO::traiterReponse($notification, $reclamation)) {
+        // Récupérer l'ID du client associé à la réclamation
+        $reclamationData = ReclamationDAO::getReclamationById($reclamation_id);
+        $clientId = $reclamationData['client_id'];
+        
+        // Créer une notification pour le client avec le contenu de la réponse inclus
+        require_once __DIR__ . '/notificationService.php';
+        $notificationService = new NotificationService();
+        $notificationService->addNotification(
+            $clientId,
+            'reclamation',
+            $reclamation_id,
+            "Votre réclamation #REF-{$reclamation_id} a été traitée: {$claim_status}. Réponse: {$response_text}"
+        );
+        
+        header("Location: ../ihm/admin/claims-frs.php?success=response_sent");
+        exit;
     } else {
-        header("Location: ../ihm/admin/claims-frs.php");
+        error_log("Échec du traitement de la réclamation ID: $reclamation_id");
+        header("Location: ../ihm/admin/claims-frs.php?error=response_failed");
         exit;
     }
 }

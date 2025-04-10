@@ -8,9 +8,9 @@ class Database {
     // Rendre le constructeur privé pour utiliser le pattern Singleton
     private function __construct() {
         $host = '127.0.0.1';
-        $dbName = 'gestion_factures';
+        $dbName = 'electricite_db';
         $user = 'root';
-        $password = '';
+        $password = 'password';
         $dsn = "mysql:host={$host};dbname={$dbName};charset=utf8mb4";
         
         try {

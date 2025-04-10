@@ -161,8 +161,8 @@ public static function enregistrerReponse(notification $notif) {
     $stmt = $conn->prepare($sql);
     return $stmt->execute([
         ':reclamation_id' => $notif->getReclamationId(),
-        ':contenu' => $notif->getContenu(),
-        ':status' => $notif->getStatut()
+        ':contenu' => $notif->getContent(),
+        ':status' => $notif->getStatus()
     ]);
 }
 

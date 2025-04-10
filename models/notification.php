@@ -22,7 +22,7 @@ class Notification {
     public function getNotificationId() { return $this->notification_id; }
     public function getClientId()       { return $this->client_id; }
     public function getType()           { return $this->type; }
-    public function getReference()      { return $this->reference; }
+    public function getReclamationId()      { return $this->reference; }
     public function getContent()        { return $this->content; }
     public function getStatus()         { return $this->status; }
     public function getCreatedAt()      { return $this->created_at; }

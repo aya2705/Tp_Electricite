@@ -26,7 +26,7 @@ class NotificationDAO {
         $params = [
             ':client_id' => $notification->getClientId(),
             ':type'      => $notification->getType(),
-            ':reference' => $notification->getReference(),
+            ':reference' => $notification->getReclamationId(), // Correction ici
             ':content'   => $notification->getContent()
         ];
         return $stmt->execute($params);
